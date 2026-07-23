@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tokens de diseño VetNote como variables CSS (fuente de verdad del theming). */
+:root {
+  --color-primary: #2f6f64;
+  --color-primary-dark: #24584f;
+  --color-secondary: #5b7fa3;
+  --color-accent: #d99a4e;
+  --color-background: #f5f7f6;
+  --color-surface: #ffffff;
+  --color-text: #1f2933;
+  --color-text-muted: #667085;
+  --color-border: #dde3e1;
+  --color-success: #348a5b;
+  --color-warning: #c98624;
+  --color-error: #c94a4a;
+
+  --radius-card: 16px;
+
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-content font-sans antialiased;
+    /* Respeta el notch en móviles instalados como PWA. */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Tipografía clínica legible por defecto. */
+  input,
+  textarea,
+  select {
+    @apply text-content;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-card border border-border bg-surface shadow-card;
+  }
+  .btn-primary {
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-xl bg-primary px-4 font-medium text-white transition-colors hover:bg-primary-dark active:bg-primary-dark disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 font-medium text-content transition-colors hover:bg-background;
+  }
+}
