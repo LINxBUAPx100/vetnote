@@ -5,6 +5,7 @@ import {
   Plus,
   Stethoscope,
   Menu,
+  Users,
   FileText,
   Pill,
   RefreshCw,
@@ -15,6 +16,7 @@ import { cn } from '@/lib/cn'
 const desktopNav = [
   { to: '/', label: 'Inicio', icon: Home, end: true },
   { to: '/patients', label: 'Pacientes', icon: PawPrint },
+  { to: '/owners', label: 'Tutores', icon: Users },
   { to: '/consultations', label: 'Consultas', icon: Stethoscope },
   { to: '/templates', label: 'Plantillas', icon: FileText },
   { to: '/medications', label: 'Medicamentos', icon: Pill },
@@ -80,7 +82,7 @@ export function AppShell() {
           </span>
         </button>
         <BottomLink to="/consultations" label="Consultas" icon={Stethoscope} />
-        <BottomLink to="/settings" label="Más" icon={Menu} />
+        <BottomLink to="/more" label="Más" icon={Menu} />
       </nav>
     </div>
   )

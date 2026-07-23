@@ -22,6 +22,8 @@ export const patientService = {
     apiCall<Paginated<PatientSearchResult>>('searchPatients', { query, limit }),
   list: (page = 1, pageSize = 25) =>
     apiCall<Paginated<Patient>>('listPatients', { page, pageSize }),
+  listByOwner: (owner_id: string) =>
+    apiCall<Paginated<Patient>>('listPatientsByOwner', { owner_id }),
   softDelete: (patient_id: string) =>
     apiCall<{ patient_id: string; status: string }>('softDeletePatient', { patient_id }),
 }

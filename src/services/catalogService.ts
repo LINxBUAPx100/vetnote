@@ -11,6 +11,9 @@ export const templateService = {
 
 export const medicationService = {
   list: () => apiCall<Paginated<Medication>>('listMedications'),
+  create: (payload: Partial<Medication>) => apiCall<Medication>('createMedication', payload),
+  update: (payload: Partial<Medication> & { medication_id: string }, expectedUpdatedAt?: string) =>
+    apiCall<Medication>('updateMedication', payload, { expectedUpdatedAt }),
 }
 
 export const settingsService = {

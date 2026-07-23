@@ -121,6 +121,16 @@ var PatientService = (function () {
     }
   }
 
+  /** Pacientes de un tutor (para la vista de tutor). */
+  function listByOwner_(p) {
+    var ownerId = ValidationService.require(p, 'owner_id')
+    var rows = SheetRepository.findAll(SHEETS.PATIENTS, function (pt) {
+      return String(pt.owner_id) === String(ownerId) && pt.status !== 'deleted'
+    }).map(cleanRow_)
+    rows.sort(function (a, b) { return String(a.name).localeCompare(String(b.name)) })
+    return { results: rows, total: rows.length }
+  }
+
   function softDelete_(p, ctx) {
     var id = ValidationService.require(p, 'patient_id')
     var current = SheetRepository.findById(SHEETS.PATIENTS, id)
@@ -137,6 +147,6 @@ var PatientService = (function () {
 
   return {
     create: create_, get: get_, update: update_,
-    search: search_, list: list_, softDelete: softDelete_,
+    search: search_, list: list_, listByOwner: listByOwner_, softDelete: softDelete_,
   }
 })()

@@ -10,6 +10,7 @@ var Router = (function () {
     createOwner: true, updateOwner: true,
     createConsultation: true, updateConsultation: true, softDeleteConsultation: true,
     createTemplate: true, updateTemplate: true,
+    createMedication: true, updateMedication: true,
     updateSettings: true,
   }
 
@@ -28,6 +29,7 @@ var Router = (function () {
       case 'getPatient': return PatientService.get(payload)
       case 'searchPatients': return PatientService.search(payload)
       case 'listPatients': return PatientService.list(payload)
+      case 'listPatientsByOwner': return PatientService.listByOwner(payload)
       case 'softDeletePatient': return PatientService.softDelete(payload, ctx)
 
       // Tutores
@@ -35,6 +37,7 @@ var Router = (function () {
       case 'updateOwner': return OwnerService.update(payload, ctx, meta)
       case 'getOwner': return OwnerService.get(payload)
       case 'searchOwners': return OwnerService.search(payload)
+      case 'listOwners': return OwnerService.list(payload)
 
       // Consultas
       case 'createConsultation': return ConsultationService.create(payload, ctx)
@@ -49,6 +52,8 @@ var Router = (function () {
       case 'updateTemplate': return TemplateService.update(payload, ctx, meta)
       case 'listTemplates': return TemplateService.list()
       case 'listMedications': return MedicationService.list()
+      case 'createMedication': return MedicationService.create(payload, ctx)
+      case 'updateMedication': return MedicationService.update(payload, ctx, meta)
 
       // Configuración y export
       case 'getSettings': return SettingsService.getAll()

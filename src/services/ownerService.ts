@@ -9,4 +9,5 @@ export const ownerService = {
   get: (owner_id: string) => apiCall<Owner>('getOwner', { owner_id }),
   search: (query: string, limit = 15) =>
     apiCall<Paginated<Owner>>('searchOwners', { query, limit }),
+  list: (page = 1, pageSize = 50) => apiCall<Paginated<Owner>>('listOwners', { page, pageSize }),
 }

@@ -68,5 +68,17 @@ var OwnerService = (function () {
     return { results: matches.slice(0, limit).map(cleanRow_), total: matches.length }
   }
 
-  return { create: create_, get: get_, update: update_, search: search_ }
+  /** Listado paginado de tutores activos, ordenados por nombre. */
+  function list_(p) {
+    var page = Math.max(1, Number(p && p.page) || 1)
+    var size = Math.min(Number(p && p.pageSize) || CONFIG.DEFAULT_PAGE_SIZE, CONFIG.MAX_PAGE_SIZE)
+    var all = SheetRepository.findAll(SHEETS.OWNERS, function (o) {
+      return o.status !== 'deleted'
+    }).map(cleanRow_)
+    all.sort(function (a, b) { return String(a.full_name).localeCompare(String(b.full_name)) })
+    var start = (page - 1) * size
+    return { results: all.slice(start, start + size), total: all.length, page: page, pageSize: size }
+  }
+
+  return { create: create_, get: get_, update: update_, search: search_, list: list_ }
 })()

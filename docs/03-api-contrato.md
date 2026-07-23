@@ -55,6 +55,10 @@ En `CONFLICT` se incluye `serverRecord` con la versión actual del servidor.
 | `updateOwner` | sí | `{owner_id, ...}` | Owner |
 | `getOwner` | no | `{owner_id}` | Owner |
 | `searchOwners` | no | `{query, limit}` | `{results[], total}` |
+| `listOwners` | no | `{page, pageSize}` | `{results[], total, page, pageSize}` |
+| `listPatientsByOwner` | no | `{owner_id}` | `{results[], total}` |
+| `createMedication` | sí | `{generic_name, ...}` | Medication |
+| `updateMedication` | sí | `{medication_id, ...}` | Medication |
 | `createPatient` | sí | `{owner_id, name, species, ...}` | Patient |
 | `updatePatient` | sí | `{patient_id, ...}` | Patient |
 | `getPatient` | no | `{patient_id}` | Patient + `owner` |
