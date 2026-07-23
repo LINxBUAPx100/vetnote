@@ -23,6 +23,14 @@ function sanitizeText_(value, maxLen) {
   return s
 }
 
+/** Sanitiza un telefono: conserva digitos, +, espacios, guiones y parentesis. */
+function sanitizePhone_(value, maxLen) {
+  if (value === null || value === undefined) return ''
+  var s = String(value).replace(/[^0-9+()\-\s]/g, '').trim()
+  var limit = maxLen || 40
+  return s.length > limit ? s.substring(0, limit) : s
+}
+
 /** Parsea a numero o devuelve '' si no es valido. */
 function toNumberOrEmpty_(value) {
   if (value === null || value === undefined || value === '') return ''

@@ -9,8 +9,8 @@ var OwnerService = (function () {
     var record = {
       owner_id: uuid_(),
       full_name: sanitizeText_(p.full_name, 150),
-      phone: sanitizeText_(p.phone, 40),
-      secondary_phone: sanitizeText_(p.secondary_phone, 40),
+      phone: sanitizePhone_(p.phone, 40),
+      secondary_phone: sanitizePhone_(p.secondary_phone, 40),
       email: sanitizeText_(p.email, 120),
       address: sanitizeText_(p.address, 300),
       notes: sanitizeText_(p.notes, CONFIG.MAX_TEXT_LEN),
@@ -40,8 +40,8 @@ var OwnerService = (function () {
     assertNoConflict_(current, meta)
     var changes = {
       full_name: sanitizeText_(defaultIfEmpty_(p.full_name, current.full_name), 150),
-      phone: sanitizeText_(defaultIfEmpty_(p.phone, current.phone), 40),
-      secondary_phone: sanitizeText_(defaultIfEmpty_(p.secondary_phone, current.secondary_phone), 40),
+      phone: sanitizePhone_(defaultIfEmpty_(p.phone, current.phone), 40),
+      secondary_phone: sanitizePhone_(defaultIfEmpty_(p.secondary_phone, current.secondary_phone), 40),
       email: sanitizeText_(defaultIfEmpty_(p.email, current.email), 120),
       address: sanitizeText_(defaultIfEmpty_(p.address, current.address), 300),
       notes: sanitizeText_(defaultIfEmpty_(p.notes, current.notes), CONFIG.MAX_TEXT_LEN),

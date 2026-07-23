@@ -46,3 +46,4 @@ Guía paso a paso para administrador: [`docs/06-despliegue.md`](docs/06-desplieg
 - [Sistema de diseño](docs/04-sistema-diseno.md)
 - [Roadmap y aceptación](docs/05-roadmap.md)
 - [Despliegue y respaldo](docs/06-despliegue.md)
+- [Manual de uso](docs/07-manual-uso.md)

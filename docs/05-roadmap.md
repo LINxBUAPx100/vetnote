@@ -9,9 +9,9 @@
 | 4 | Nota WhatsApp + copiar + imagen + configuración de clínica | Nota correcta, copia, PNG descargable | ▶ |
 | 5 | Plantillas + medicamentos + frases frecuentes | Aplicar/crear/duplicar plantilla | ✅ backend · ▶ frontend |
 | 6 | Sincronización: IndexedDB, cola, reintentos, conflictos, PWA update | Falla de red sin pérdida de datos; conflicto resuelto | ▶ |
-| 7 | Seguridad y auditoría: token, rate limit, auditoría, sanitización, baja lógica | Acciones auditadas; token válido | ✅ backend |
+| 7 | Seguridad y auditoría: token, rate limit, auditoría, sanitización, baja lógica | Acciones auditadas; token válido | ✅ (incluye sanitización de teléfono) |
 | 8 | Calidad: pruebas, accesibilidad, rendimiento, responsive | Tests verdes; a11y básica | ✅ 19 tests · code-split · a11y básica |
-| 9 | Producción: deploy Apps Script + Pages, respaldo, manual | App instalable en producción | ▶ |
+| 9 | Producción: deploy Apps Script + Pages, respaldo, manual | App instalable en producción | ✅ guía + manual · ⧗ despliegue lo ejecuta el usuario |
 
 Leyenda: ✅ hecho · ▶ pendiente/en curso.
 
