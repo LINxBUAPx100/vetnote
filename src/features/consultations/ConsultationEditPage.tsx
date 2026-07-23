@@ -7,6 +7,7 @@ import { Spinner, ErrorState } from '@/components/feedback/States'
 import { ClinicalTextarea } from './ClinicalTextarea'
 import { NotePreview } from './NotePreview'
 import { generateWhatsAppNote } from './noteGenerator'
+import { parseCustomValues } from './customFields'
 import { useConsultation, useUpdateConsultation, useSettings } from './hooks'
 import { usePatient } from '@/features/patients/hooks'
 import { isConsultationEmpty, type ConsultationForm } from '@/schemas'
@@ -14,7 +15,7 @@ import { toast } from '@/stores/uiStore'
 import { ApiClientError } from '@/types/api'
 import type { Consultation } from '@/types/domain'
 
-type FormData = Partial<ConsultationForm>
+type FormData = Partial<ConsultationForm> & { custom_values?: string }
 
 /** Edición de una consulta existente (una sola página con control de conflicto). */
 export function ConsultationEditPage() {
@@ -33,6 +34,13 @@ export function ConsultationEditPage() {
 
   const set = (name: keyof FormData, value: unknown) =>
     setForm((f) => ({ ...f, [name]: value }))
+
+  const setCustomValue = (index: number, value: string) => {
+    const arr = parseCustomValues(form.custom_values)
+    if (!arr[index]) return
+    arr[index] = { ...arr[index], value }
+    set('custom_values', JSON.stringify(arr))
+  }
 
   const note = useMemo(
     () =>
@@ -100,6 +108,17 @@ export function ConsultationEditPage() {
       <ClinicalTextarea label="Diagnóstico presuntivo" value={t('presumptive_diagnosis')} onChange={(v) => set('presumptive_diagnosis', v)} />
       <ClinicalTextarea label="Tratamiento" value={t('treatment')} onChange={(v) => set('treatment', v)} />
       <ClinicalTextarea label="Recomendaciones" value={t('recommendations')} onChange={(v) => set('recommendations', v)} showPhrases />
+
+      {parseCustomValues(form.custom_values).length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-sm font-semibold text-content-muted">Campos de la plantilla</h2>
+          {parseCustomValues(form.custom_values).map((f, i) => (
+            <Field key={i} label={f.label}>
+              <Input value={f.value} onChange={(e) => setCustomValue(i, e.target.value)} />
+            </Field>
+          ))}
+        </div>
+      )}
 
       <details>
         <summary className="cursor-pointer text-sm font-medium text-primary">Vista previa de la nota</summary>

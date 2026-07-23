@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { db } from '@/database/localDb'
 import { consultationService } from '@/services/consultationService'
 import { templateService, settingsService } from '@/services/catalogService'
-import { writeWithQueue } from '@/services/syncService'
 import type { Consultation } from '@/types/domain'
 import type { ConsultationForm } from '@/schemas'
 
@@ -73,12 +72,7 @@ export function useRecentConsultations(limit = 15) {
 export function useCreateConsultation() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (payload: Partial<Consultation>) =>
-      writeWithQueue<Consultation>({
-        action: 'createConsultation',
-        payload,
-        label: `Consulta de paciente ${payload.patient_id}`,
-      }),
+    mutationFn: (payload: Partial<Consultation>) => consultationService.create(payload),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['consultations'] })
       qc.invalidateQueries({ queryKey: ['patient', data.patient_id, 'history'] })

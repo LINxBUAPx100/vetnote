@@ -1,24 +1,48 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft,
   PawPrint,
   Plus,
   Pencil,
   Phone,
-  MessageCircle,
   Stethoscope,
   Calendar,
+  Trash2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Skeleton, ErrorState, EmptyState } from '@/components/feedback/States'
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
+import { WhatsAppMenu } from '@/components/WhatsAppMenu'
 import { usePatient, usePatientHistory } from './hooks'
+import { patientService } from '@/services/patientService'
+import { toast } from '@/stores/uiStore'
 import { formatDate, phoneDigits } from '@/utils/format'
 
 export function PatientDetailPage() {
   const { patientId } = useParams()
   const navigate = useNavigate()
+  const qc = useQueryClient()
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const patient = usePatient(patientId)
   const history = usePatientHistory(patientId)
+
+  const remove = useMutation({
+    mutationFn: () => patientService.softDelete(patientId!),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['patients'] })
+      if (patient.data?.owner) {
+        qc.invalidateQueries({ queryKey: ['owner', patient.data.owner.owner_id, 'pets'] })
+      }
+      toast.success('Mascota eliminada')
+      navigate(patient.data?.owner ? `/owners/${patient.data.owner.owner_id}` : '/patients')
+    },
+    onError: (e) => {
+      setConfirmDelete(false)
+      toast.error((e as Error).message)
+    },
+  })
 
   if (patient.isLoading) return <Skeleton className="mt-6 h-40" />
   if (patient.isError)
@@ -28,6 +52,7 @@ export function PatientDetailPage() {
   const p = patient.data
   const owner = p.owner
   const phone = phoneDigits(owner?.phone)
+  const consultationCount = history.data?.results.length ?? 0
 
   return (
     <div className="space-y-5 pb-6">
@@ -91,21 +116,25 @@ export function PatientDetailPage() {
             <a href={`tel:${phone}`} className="btn-ghost">
               <Phone className="h-4 w-4" /> Llamar
             </a>
-            <a
-              href={`https://wa.me/${phone}`}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-ghost"
-            >
-              <MessageCircle className="h-4 w-4" /> WhatsApp
-            </a>
+            <WhatsAppMenu phone={phone} petName={p.name} ownerName={owner?.full_name} />
           </>
         )}
       </div>
 
+      <Button variant="danger" className="w-full" onClick={() => setConfirmDelete(true)}>
+        <Trash2 className="h-4 w-4" /> Eliminar mascota
+      </Button>
+
       {/* Historial */}
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-content-muted">Historial clínico</h2>
+        <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-content-muted">
+          Historial clínico
+          {consultationCount > 0 && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              {consultationCount} consulta{consultationCount === 1 ? '' : 's'}
+            </span>
+          )}
+        </h2>
         {history.isLoading && <Skeleton className="h-24" />}
         {history.data && history.data.results.length === 0 && (
           <EmptyState
@@ -141,6 +170,17 @@ export function PatientDetailPage() {
           ))}
         </ol>
       </section>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        danger
+        title={`¿Eliminar a ${p.name}?`}
+        description="La mascota y su expediente se darán de baja. Esta acción se puede revertir desde la hoja de cálculo si es necesario."
+        confirmLabel="Eliminar"
+        loading={remove.isPending}
+        onConfirm={() => remove.mutate()}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   )
 }

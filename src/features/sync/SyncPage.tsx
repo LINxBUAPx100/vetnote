@@ -7,7 +7,8 @@ import { db } from '@/database/localDb'
 import { processQueue } from '@/services/syncService'
 import { toast } from '@/stores/uiStore'
 
-export function SyncPage() {
+/** Panel de sincronización, embebido en Configuración. */
+export function SyncPanel() {
   const [syncing, setSyncing] = useState(false)
   const items = useLiveQuery(() => db.syncQueue.orderBy('createdAt').toArray(), [], [])
   const pending = items.filter((i) => i.status !== 'synced')
@@ -30,13 +31,16 @@ export function SyncPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Sincronización</h1>
-        <Button onClick={run} loading={syncing} className="px-3">
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold">Sincronización</h2>
+        </div>
+        <Button onClick={run} loading={syncing} variant="ghost" className="px-3">
           <RefreshCw className="h-4 w-4" /> Sincronizar
         </Button>
-      </header>
+      </div>
 
       {pending.length === 0 ? (
         <EmptyState
@@ -74,7 +78,7 @@ export function SyncPage() {
           </ul>
         </>
       )}
-    </div>
+    </section>
   )
 }
 

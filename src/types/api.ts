@@ -31,6 +31,7 @@ export type ApiAction =
   | 'updateMedication'
   | 'softDeletePatient'
   | 'softDeleteConsultation'
+  | 'softDeleteOwner'
   | 'getSettings'
   | 'updateSettings'
   | 'exportData'

@@ -1,21 +1,42 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, FileText } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Pencil, FileText, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Skeleton, ErrorState } from '@/components/feedback/States'
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { NotePreview } from './NotePreview'
 import { LazyClinicalNoteCard } from './LazyClinicalNoteCard'
 import { generateWhatsAppNote } from './noteGenerator'
 import { useConsultation, useSettings } from './hooks'
 import { usePatient } from '@/features/patients/hooks'
+import { consultationService } from '@/services/consultationService'
+import { toast } from '@/stores/uiStore'
 import { formatDate } from '@/utils/format'
 
 export function ConsultationDetailPage() {
   const { consultationId } = useParams()
   const navigate = useNavigate()
+  const qc = useQueryClient()
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const consultation = useConsultation(consultationId)
   const settings = useSettings()
   const patient = usePatient(consultation.data?.patient_id)
+
+  const remove = useMutation({
+    mutationFn: () => consultationService.softDelete(consultationId!),
+    onSuccess: () => {
+      const patientId = consultation.data?.patient_id
+      qc.invalidateQueries({ queryKey: ['consultations'] })
+      if (patientId) qc.invalidateQueries({ queryKey: ['patient', patientId, 'history'] })
+      toast.success('Consulta eliminada')
+      navigate(patientId ? `/patients/${patientId}` : '/consultations')
+    },
+    onError: (e) => {
+      setConfirmDelete(false)
+      toast.error((e as Error).message)
+    },
+  })
 
   const note = useMemo(() => {
     if (!consultation.data) return ''
@@ -57,6 +78,14 @@ export function ConsultationDetailPage() {
         >
           <Pencil className="h-5 w-5" />
         </button>
+        <button
+          type="button"
+          onClick={() => setConfirmDelete(true)}
+          aria-label="Eliminar consulta"
+          className="text-content-muted hover:text-error"
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
       </header>
 
       <div>
@@ -74,12 +103,30 @@ export function ConsultationDetailPage() {
         </Button>
       )}
 
-      <details>
-        <summary className="cursor-pointer text-sm font-medium text-primary">Generar imagen</summary>
-        <div className="mt-2">
-          <LazyClinicalNoteCard consultation={c} patient={patient.data} settings={settings.data} />
+      <details className="card p-3">
+        <summary className="cursor-pointer text-sm font-medium text-primary">
+          Generar imagen (doctor / tutor)
+        </summary>
+        <div className="mt-3">
+          <LazyClinicalNoteCard
+            consultation={c}
+            patient={patient.data}
+            owner={patient.data?.owner}
+            settings={settings.data}
+          />
         </div>
       </details>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        danger
+        title="¿Eliminar esta consulta?"
+        description="La consulta se dará de baja del expediente. Se puede revertir desde la hoja de cálculo si es necesario."
+        confirmLabel="Eliminar"
+        loading={remove.isPending}
+        onConfirm={() => remove.mutate()}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   )
 }

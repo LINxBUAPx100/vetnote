@@ -80,5 +80,38 @@ var OwnerService = (function () {
     return { results: all.slice(start, start + size), total: all.length, page: page, pageSize: size }
   }
 
-  return { create: create_, get: get_, update: update_, search: search_, list: list_ }
+  /**
+   * Baja lógica de un tutor. Se rechaza si aún tiene mascotas activas, para no
+   * dejar pacientes huérfanos: primero deben eliminarse o reasignarse sus mascotas.
+   */
+  function softDelete_(p, ctx) {
+    var id = ValidationService.require(p, 'owner_id')
+    var current = SheetRepository.findById(SHEETS.OWNERS, id)
+    if (!current) throw errorObj_('NOT_FOUND', 'Tutor no encontrado.')
+
+    var activePets = SheetRepository.findAll(SHEETS.PATIENTS, function (pt) {
+      return String(pt.owner_id) === String(id) && pt.status !== 'deleted'
+    })
+    if (activePets.length > 0) {
+      throw errorObj_(
+        'VALIDATION_ERROR',
+        'Este tutor tiene ' + activePets.length + ' mascota(s) registrada(s). ' +
+          'Elimina o reasigna sus mascotas antes de eliminar al tutor.',
+      )
+    }
+
+    SheetRepository.updateById(SHEETS.OWNERS, id, {
+      status: 'deleted', updated_at: nowIso_(),
+    })
+    AuditService.log({
+      action: 'softDeleteOwner', entityType: 'owner', entityId: id,
+      summary: 'Tutor dado de baja (lógica)', requestId: ctx.requestId, userId: ctx.userId,
+    })
+    return { owner_id: id, status: 'deleted' }
+  }
+
+  return {
+    create: create_, get: get_, update: update_,
+    search: search_, list: list_, softDelete: softDelete_,
+  }
 })()

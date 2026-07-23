@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/feedback/States'
 import { templateService } from '@/services/catalogService'
 import { useTemplates } from '@/features/consultations/hooks'
+import { CustomFieldsBuilder } from './CustomFieldsBuilder'
+import { parseFieldDefs } from '@/features/consultations/customFields'
 import { toast } from '@/stores/uiStore'
 import { ApiClientError } from '@/types/api'
 import type { Template } from '@/types/domain'
@@ -115,6 +117,11 @@ export function TemplateEditPage() {
           <Textarea value={t(key)} onChange={(e) => set(key, e.target.value)} />
         </Field>
       ))}
+
+      <CustomFieldsBuilder
+        value={parseFieldDefs(form.custom_fields)}
+        onChange={(defs) => set('custom_fields', JSON.stringify(defs))}
+      />
 
       <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface p-3 md:static md:border-0 md:bg-transparent md:p-0">
         <div className="mx-auto max-w-3xl">

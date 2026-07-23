@@ -27,6 +27,8 @@ var TemplateService = (function () {
     var now = nowIso_()
     var record = { template_id: uuid_(), created_at: now, updated_at: now, status: 'active' }
     FIELDS.forEach(function (f) { record[f] = sanitizeText_(p[f], CONFIG.MAX_TEXT_LEN) })
+    // Campos personalizados: JSON (permitimos más longitud que un campo normal).
+    record.custom_fields = sanitizeText_(p.custom_fields, 20000)
     SheetRepository.insert(SHEETS.TEMPLATES, record)
     CacheService.getScriptCache().remove('templates')
     AuditService.log({
@@ -45,6 +47,7 @@ var TemplateService = (function () {
     FIELDS.forEach(function (f) {
       if (p[f] !== undefined) changes[f] = sanitizeText_(p[f], CONFIG.MAX_TEXT_LEN)
     })
+    if (p.custom_fields !== undefined) changes.custom_fields = sanitizeText_(p.custom_fields, 20000)
     var updated = SheetRepository.updateById(SHEETS.TEMPLATES, id, changes)
     CacheService.getScriptCache().remove('templates')
     AuditService.log({

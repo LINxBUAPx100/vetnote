@@ -7,7 +7,7 @@ var Router = (function () {
   // Acciones que escriben en las hojas → requieren LockService.
   var WRITE_ACTIONS = {
     createPatient: true, updatePatient: true, softDeletePatient: true,
-    createOwner: true, updateOwner: true,
+    createOwner: true, updateOwner: true, softDeleteOwner: true,
     createConsultation: true, updateConsultation: true, softDeleteConsultation: true,
     createTemplate: true, updateTemplate: true,
     createMedication: true, updateMedication: true,
@@ -38,6 +38,7 @@ var Router = (function () {
       case 'getOwner': return OwnerService.get(payload)
       case 'searchOwners': return OwnerService.search(payload)
       case 'listOwners': return OwnerService.list(payload)
+      case 'softDeleteOwner': return OwnerService.softDelete(payload, ctx)
 
       // Consultas
       case 'createConsultation': return ConsultationService.create(payload, ctx)

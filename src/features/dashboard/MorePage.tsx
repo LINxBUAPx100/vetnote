@@ -3,7 +3,6 @@ import {
   Users,
   FileText,
   Pill,
-  RefreshCw,
   Settings,
   ChevronRight,
   type LucideIcon,
@@ -13,8 +12,7 @@ const items: { to: string; label: string; icon: LucideIcon; desc: string }[] = [
   { to: '/owners', label: 'Tutores', icon: Users, desc: 'Directorio de tutores y sus mascotas' },
   { to: '/templates', label: 'Plantillas', icon: FileText, desc: 'Plantillas de consulta' },
   { to: '/medications', label: 'Medicamentos', icon: Pill, desc: 'Catálogo de medicamentos' },
-  { to: '/sync', label: 'Sincronización', icon: RefreshCw, desc: 'Registros pendientes de enviar' },
-  { to: '/settings', label: 'Configuración', icon: Settings, desc: 'Datos de la clínica' },
+  { to: '/settings', label: 'Configuración', icon: Settings, desc: 'Datos, servidor y sincronización' },
 ]
 
 /** Menú "Más" para navegación móvil (secciones que no caben en la barra inferior). */

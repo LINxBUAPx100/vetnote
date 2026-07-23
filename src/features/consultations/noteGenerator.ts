@@ -1,5 +1,6 @@
 import type { Consultation, Patient, Owner, ClinicSettings } from '@/types/domain'
 import { formatDate } from '@/utils/format'
+import { parseCustomValues } from './customFields'
 
 /**
  * Genera el texto de la consulta con formato de WhatsApp.
@@ -72,6 +73,11 @@ export function generateWhatsAppNote(input: NoteInput, options: NoteOptions = {}
   pushBlock(parts, '*📌 Diagnóstico presuntivo:*', c.presumptive_diagnosis)
   pushBlock(parts, '*🔬 Diagnósticos diferenciales:*', c.differential_diagnosis, true)
   pushBlock(parts, '*📎 Recomendaciones:*', c.recommendations, true)
+
+  // Campos personalizados de la plantilla (solo los que tienen contenido).
+  parseCustomValues(c.custom_values).forEach((f) => {
+    pushBlock(parts, `*${f.label}:*`, f.value, true)
+  })
 
   if (c.follow_up_date) {
     parts.push(`*📅 Seguimiento:*\n${formatDate(c.follow_up_date)}`)

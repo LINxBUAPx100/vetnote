@@ -5,7 +5,7 @@
  */
 
 var CONFIG = {
-  SCHEMA_VERSION: '1',
+  SCHEMA_VERSION: '2',
   // Clave en Script Properties donde vive el token compartido de la app.
   TOKEN_PROPERTY: 'APP_TOKEN',
   // Rate limiting básico por CacheService.
@@ -55,14 +55,14 @@ var HEADERS = {
     'mucous_membranes', 'hydration', 'head_neck', 'thorax_forelimbs',
     'abdomen_hindlimbs_anus_tail', 'additional_exam', 'treatment',
     'presumptive_diagnosis', 'differential_diagnosis', 'recommendations',
-    'follow_up_date', 'whatsapp_note', 'created_at', 'updated_at', 'created_by',
-    'status',
+    'follow_up_date', 'whatsapp_note', 'custom_values', 'created_at', 'updated_at',
+    'created_by', 'status',
   ],
   Templates: [
     'template_id', 'name', 'description', 'species', 'category', 'reason',
     'remote_anamnesis', 'current_anamnesis', 'head_neck', 'thorax_forelimbs',
     'abdomen_hindlimbs_anus_tail', 'treatment', 'presumptive_diagnosis',
-    'recommendations', 'created_at', 'updated_at', 'status',
+    'recommendations', 'custom_fields', 'created_at', 'updated_at', 'status',
   ],
   Medications: [
     'medication_id', 'generic_name', 'commercial_name', 'presentation',

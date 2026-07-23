@@ -88,7 +88,7 @@ var PatientService = (function () {
       if (pt.status === 'deleted') return false
       var owner = ownerById[pt.owner_id]
       var haystack = [
-        pt.name, pt.breed, pt.species, pt.patient_id,
+        pt.name, pt.breed, pt.species, pt.patient_id, pt.microchip,
         owner ? owner.full_name : '', owner ? owner.phone : '',
       ].join(' ').toLowerCase()
       return haystack.indexOf(q) !== -1

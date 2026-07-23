@@ -5,31 +5,45 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import {
   Plus,
   Search,
-  WifiOff,
   CheckCircle2,
-  AlertTriangle,
   Stethoscope,
   RefreshCw,
   Calendar,
+  PawPrint,
+  Users,
 } from 'lucide-react'
-import { apiCall } from '@/services/apiClient'
 import { env } from '@/config/env'
-import { ApiClientError } from '@/types/api'
-import type { HealthCheckResult } from '@/types/domain'
 import { Input } from '@/components/ui/Field'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useSearchPatients } from '@/features/patients/hooks'
 import { useRecentConsultations } from '@/features/consultations/hooks'
+import { consultationService } from '@/services/consultationService'
+import { patientService } from '@/services/patientService'
+import { ownerService } from '@/services/ownerService'
 import { db } from '@/database/localDb'
 import { formatDate } from '@/utils/format'
 
-function useHealthCheck() {
-  return useQuery({
-    queryKey: ['healthCheck'],
-    queryFn: () => apiCall<HealthCheckResult>('healthCheck'),
-    enabled: env.isConfigured,
-    staleTime: 30_000,
+function useStats() {
+  const consultations = useQuery({
+    queryKey: ['stats', 'consultations'],
+    queryFn: () => consultationService.listRecent(1),
+    staleTime: 60_000,
   })
+  const patients = useQuery({
+    queryKey: ['stats', 'patients'],
+    queryFn: () => patientService.list(1, 1),
+    staleTime: 60_000,
+  })
+  const owners = useQuery({
+    queryKey: ['stats', 'owners'],
+    queryFn: () => ownerService.list(1, 1),
+    staleTime: 60_000,
+  })
+  return {
+    consultations: consultations.data?.total,
+    patients: patients.data?.total,
+    owners: owners.data?.total,
+  }
 }
 
 export function DashboardPage() {
@@ -37,7 +51,7 @@ export function DashboardPage() {
   const [query, setQuery] = useState('')
   const debounced = useDebounced(query)
   const search = useSearchPatients(debounced)
-  const health = useHealthCheck()
+  const stats = useStats()
   const recent = useRecentConsultations(5)
   const pending = useLiveQuery(
     () => db.syncQueue.where('status').notEqual('synced').count(),
@@ -93,8 +107,16 @@ export function DashboardPage() {
         )}
       </div>
 
+      {env.isConfigured && (
+        <div className="grid grid-cols-3 gap-2">
+          <StatCard to="/consultations" icon={Stethoscope} value={stats.consultations} label="Consultas" />
+          <StatCard to="/patients" icon={PawPrint} value={stats.patients} label="Pacientes" />
+          <StatCard to="/owners" icon={Users} value={stats.owners} label="Tutores" />
+        </div>
+      )}
+
       {pending > 0 && (
-        <Link to="/sync" className="card flex items-center gap-3 p-3">
+        <Link to="/settings" className="card flex items-center gap-3 p-3">
           <RefreshCw className="h-5 w-5 text-warning" />
           <div className="flex-1">
             <p className="font-medium">Pendientes de sincronizar</p>
@@ -129,50 +151,36 @@ export function DashboardPage() {
         )}
       </section>
 
-      <ConnectionCard health={health} />
+      <ConnectionCard />
     </div>
   )
 }
 
-function ConnectionCard({ health }: { health: ReturnType<typeof useHealthCheck> }) {
-  if (!env.isConfigured) {
-    return (
-      <div className="card flex items-start gap-3 p-4">
-        <AlertTriangle className="mt-0.5 h-5 w-5 text-warning" />
-        <div>
-          <p className="font-medium">Backend sin configurar</p>
-          <p className="text-sm text-content-muted">
-            Define <code className="rounded bg-background px-1">VITE_API_URL</code> y{' '}
-            <code className="rounded bg-background px-1">VITE_APP_TOKEN</code>. Ver README.
-          </p>
-        </div>
-      </div>
-    )
-  }
-  if (health.isLoading) return <div className="card h-16 animate-pulse p-4" aria-hidden />
-  if (health.isError) {
-    const err = health.error
-    const isNetwork = err instanceof ApiClientError && err.code === 'NETWORK_ERROR'
-    return (
-      <div className="card flex items-start gap-3 p-4">
-        <WifiOff className="mt-0.5 h-5 w-5 text-error" />
-        <div>
-          <p className="font-medium">Sin conexión con Google Sheets</p>
-          <p className="text-sm text-content-muted">
-            {isNetwork
-              ? 'No se pudo alcanzar el backend. Revisa la URL del Web App.'
-              : (err as Error).message}
-          </p>
-        </div>
-      </div>
-    )
-  }
+function StatCard({
+  to,
+  icon: Icon,
+  value,
+  label,
+}: {
+  to: string
+  icon: typeof Stethoscope
+  value: number | undefined
+  label: string
+}) {
+  return (
+    <Link to={to} className="card flex flex-col items-center gap-1 p-3 hover:bg-background">
+      <Icon className="h-5 w-5 text-primary" />
+      <span className="text-xl font-bold leading-none">{value ?? '—'}</span>
+      <span className="text-xs text-content-muted">{label}</span>
+    </Link>
+  )
+}
+
+function ConnectionCard() {
   return (
     <div className="card flex items-center gap-3 p-4">
       <CheckCircle2 className="h-5 w-5 text-success" />
-      <p className="text-sm">
-        Conectado a Google Sheets · esquema v{health.data?.schemaVersion}
-      </p>
+      <p className="text-sm">Datos guardados en la nube (Firebase)</p>
     </div>
   )
 }

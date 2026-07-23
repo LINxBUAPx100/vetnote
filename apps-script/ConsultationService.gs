@@ -33,6 +33,8 @@ var ConsultationService = (function () {
     }
     TEXT_FIELDS.forEach(function (f) { record[f] = sanitizeText_(p[f], CONFIG.MAX_TEXT_LEN) })
     NUM_FIELDS.forEach(function (f) { record[f] = toNumberOrEmpty_(p[f]) })
+    // Foto JSON de los campos personalizados de la plantilla.
+    record.custom_values = sanitizeText_(p.custom_values, 20000)
 
     SheetRepository.insert(SHEETS.CONSULTATIONS, record)
     AuditService.log({
@@ -66,6 +68,7 @@ var ConsultationService = (function () {
     })
     if (p.consultation_date !== undefined) changes.consultation_date = sanitizeText_(p.consultation_date, 30)
     if (p.follow_up_date !== undefined) changes.follow_up_date = sanitizeText_(p.follow_up_date, 30)
+    if (p.custom_values !== undefined) changes.custom_values = sanitizeText_(p.custom_values, 20000)
 
     var updated = SheetRepository.updateById(SHEETS.CONSULTATIONS, id, changes)
     AuditService.log({

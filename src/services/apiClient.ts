@@ -107,6 +107,51 @@ export async function apiCall<D = unknown, P = unknown>(
   )
 }
 
+/**
+ * Prueba una configuración de backend SIN guardarla ni depender de `env`.
+ * Se usa en Configuración para validar la URL/token antes de persistirlos.
+ * Devuelve el objeto de healthCheck si todo va bien; lanza ApiClientError si no.
+ */
+export async function pingBackend(
+  apiUrl: string,
+  appToken: string,
+): Promise<{ schemaVersion?: string }> {
+  const url = apiUrl.trim()
+  if (!url) throw new ApiClientError('Falta la URL del backend.', 'NOT_CONFIGURED')
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS)
+  let raw: Response
+  try {
+    raw = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'healthCheck', token: appToken.trim(), payload: {} }),
+      redirect: 'follow',
+      signal: controller.signal,
+    })
+  } catch {
+    throw new ApiClientError(
+      'No se pudo conectar. Revisa que la URL termine en /exec y que el despliegue sea "Cualquier persona".',
+      'NETWORK_ERROR',
+    )
+  } finally {
+    clearTimeout(timeout)
+  }
+
+  let parsed: ApiResponse<{ schemaVersion?: string }>
+  try {
+    parsed = (await raw.json()) as ApiResponse<{ schemaVersion?: string }>
+  } catch {
+    throw new ApiClientError(
+      'La URL respondió algo inesperado. Suele ser una URL de Apps Script incorrecta.',
+      'BAD_RESPONSE',
+    )
+  }
+  if (parsed.success) return parsed.data
+  throw new ApiClientError(parsed.message, parsed.errorCode, parsed.requestId)
+}
+
 /** Combina varias AbortSignal en una sola (para timeout + señal externa). */
 function anySignal(signals: AbortSignal[]): AbortSignal {
   const controller = new AbortController()

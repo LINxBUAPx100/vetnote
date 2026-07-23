@@ -69,6 +69,8 @@ export interface Consultation {
   follow_up_date?: string
   /** Copia exacta del texto enviado a WhatsApp en su momento. */
   whatsapp_note?: string
+  /** Foto JSON de los campos personalizados de la plantilla (CustomFieldValue[]). */
+  custom_values?: string
   created_at: string
   updated_at: string
   created_by?: string
@@ -90,6 +92,8 @@ export interface Template {
   treatment?: string
   presumptive_diagnosis?: string
   recommendations?: string
+  /** Definiciones JSON de campos personalizados (CustomFieldDef[]). */
+  custom_fields?: string
   created_at: string
   updated_at: string
   status: RecordStatus

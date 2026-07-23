@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { Field, Input, Textarea, Select } from '@/components/ui/Field'
+import { Field, Input, Textarea, Select, DateInput } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/feedback/States'
 import { OwnerPicker } from '@/features/owners/OwnerPicker'
@@ -27,6 +27,7 @@ export function PatientFormPage() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<PatientForm>({
     resolver: zodResolver(patientSchema),
@@ -130,14 +131,15 @@ export function PatientFormPage() {
             <Input {...register('approximate_age')} placeholder="5 años" />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Fecha nacimiento">
-            <Input {...register('birth_date')} type="date" />
-          </Field>
-          <Field label="Microchip">
-            <Input {...register('microchip')} placeholder="opcional" />
-          </Field>
-        </div>
+        <Field label="Fecha nacimiento">
+          <DateInput
+            value={watch('birth_date') ?? ''}
+            onChange={(v) => setValue('birth_date', v, { shouldDirty: true })}
+          />
+        </Field>
+        <Field label="Microchip o ID" hint="Sirve para buscar a la mascota">
+          <Input {...register('microchip')} placeholder="N° de microchip o identificador" />
+        </Field>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" {...register('sterilized')} className="h-4 w-4" />
           Esterilizado/a

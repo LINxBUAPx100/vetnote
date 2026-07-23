@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import { cn } from '@/lib/cn'
+import { todayInputValue } from '@/utils/format'
 
 const baseControl =
   'w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-content-muted'
@@ -83,6 +84,41 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
     return <textarea ref={ref} className={cn(baseControl, 'min-h-24 resize-y', className)} {...rest} />
   },
 )
+
+/**
+ * Campo de fecha con botón "Hoy" que rellena la fecha actual con un toque.
+ * Controlado: recibe `value` (yyyy-MM-dd) y notifica cambios por `onChange`.
+ */
+export function DateInput({
+  value,
+  onChange,
+  id,
+  ...rest
+}: {
+  value: string
+  onChange: (value: string) => void
+  id?: string
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'>) {
+  return (
+    <div className="flex gap-2">
+      <Input
+        type="date"
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="flex-1"
+        {...rest}
+      />
+      <button
+        type="button"
+        onClick={() => onChange(todayInputValue())}
+        className="shrink-0 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-primary transition-colors hover:bg-background"
+      >
+        Hoy
+      </button>
+    </div>
+  )
+}
 
 export const Select = forwardRef<
   HTMLSelectElement,

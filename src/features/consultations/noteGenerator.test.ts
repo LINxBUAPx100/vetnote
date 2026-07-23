@@ -47,4 +47,23 @@ describe('generateWhatsAppNote', () => {
     )
     expect(note).not.toContain('Tutor:')
   })
+
+  it('incluye los campos personalizados con contenido y omite los vacíos', () => {
+    const custom_values = JSON.stringify([
+      { label: 'Lote de vacuna', value: 'AB-123' },
+      { label: 'Vacía', value: '' },
+    ])
+    const note = generateWhatsAppNote({ consultation: { reason: 'x', custom_values }, patient })
+    expect(note).toContain('*Lote de vacuna:*')
+    expect(note).toContain('AB-123')
+    expect(note).not.toContain('*Vacía:*')
+  })
+
+  it('tolera custom_values inválido sin romper', () => {
+    const note = generateWhatsAppNote({
+      consultation: { reason: 'x', custom_values: 'no-es-json' },
+      patient,
+    })
+    expect(note).toContain('*📋 Motivo de consulta:*')
+  })
 })

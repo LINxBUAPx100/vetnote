@@ -2,9 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Save, Cloud, CloudOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Field, Input, Select } from '@/components/ui/Field'
+import { Field, Input, Select, DateInput } from '@/components/ui/Field'
 import { Spinner } from '@/components/feedback/States'
 import { ClinicalTextarea } from './ClinicalTextarea'
+import { CustomFieldInputs } from './CustomFieldInputs'
+import {
+  parseFieldDefs,
+  buildCustomValues,
+  type CustomFieldDef,
+} from './customFields'
 import { PatientPicker } from './PatientPicker'
 import { NotePreview } from './NotePreview'
 import { LazyClinicalNoteCard } from './LazyClinicalNoteCard'
@@ -75,12 +81,32 @@ export function ConsultationWizardPage() {
 
   const [step, setStep] = useState(hasPreselected ? 1 : 0)
   const [form, setForm] = useState<FormData>({ consultation_type: 'consulta' })
+  const [customDefs, setCustomDefs] = useState<CustomFieldDef[]>([])
+  const [customVals, setCustomVals] = useState<Record<string, string>>({})
   const [saved, setSaved] = useState<Consultation | null>(null)
 
-  // Carga el borrador cuando esté listo.
+  // Carga el borrador cuando esté listo (separa los campos personalizados).
   useEffect(() => {
-    if (draft.ready && draft.initial) setForm((f) => ({ ...f, ...draft.initial }))
+    if (draft.ready && draft.initial) {
+      const init = draft.initial as Record<string, unknown>
+      const { __customDefs, __customVals, ...formPart } = init
+      setForm((f) => ({ ...f, ...(formPart as FormData) }))
+      if (Array.isArray(__customDefs)) setCustomDefs(__customDefs as CustomFieldDef[])
+      if (__customVals && typeof __customVals === 'object') {
+        setCustomVals(__customVals as Record<string, string>)
+      }
+    }
   }, [draft.ready, draft.initial])
+
+  // Persiste form + campos personalizados en el borrador (draft.save va con debounce).
+  useEffect(() => {
+    if (!draft.ready) return
+    draft.save({
+      ...form,
+      __customDefs: customDefs,
+      __customVals: customVals,
+    } as unknown as Partial<ConsultationForm>)
+  }, [form, customDefs, customVals, draft.ready, draft.save])
 
   // Si es un seguimiento, marca el tipo y enlaza con la consulta previa.
   useEffect(() => {
@@ -93,13 +119,13 @@ export function ConsultationWizardPage() {
     }
   }, [followUpId])
 
+  // La persistencia en el borrador la hace el efecto de arriba (con debounce).
   const set = (name: keyof FormData, value: unknown) => {
-    setForm((prev) => {
-      const next = { ...prev, [name]: value }
-      draft.save(next)
-      return next
-    })
+    setForm((prev) => ({ ...prev, [name]: value }))
   }
+
+  const setCustomVal = (id: string, value: string) =>
+    setCustomVals((prev) => ({ ...prev, [id]: value }))
 
   const applyTemplate = (tpl: Template) => {
     const keys: (keyof FormData)[] = [
@@ -117,14 +143,25 @@ export function ConsultationWizardPage() {
       if (typeof v === 'string' && v.trim()) next[k] = v
     })
     setForm(next as FormData)
-    draft.save(next as FormData)
+    // Campos personalizados de la plantilla (se reinician los valores).
+    setCustomDefs(parseFieldDefs(tpl.custom_fields))
+    setCustomVals({})
     toast.info(`Plantilla “${tpl.name}” aplicada`)
   }
+
+  const consultationWithCustom = useMemo(
+    () =>
+      ({
+        ...form,
+        custom_values: JSON.stringify(buildCustomValues(customDefs, customVals)),
+      }) as Partial<Consultation>,
+    [form, customDefs, customVals],
+  )
 
   const note = useMemo(
     () =>
       generateWhatsAppNote({
-        consultation: form as Partial<Consultation>,
+        consultation: consultationWithCustom,
         patient: patient
           ? {
               name: patient.name,
@@ -137,7 +174,7 @@ export function ConsultationWizardPage() {
         owner: patient?.ownerName ? { full_name: patient.ownerName } : null,
         settings: settings.data,
       }),
-    [form, patient, settings.data],
+    [consultationWithCustom, patient, settings.data],
   )
 
   const save = async () => {
@@ -148,6 +185,9 @@ export function ConsultationWizardPage() {
       ...form,
       patient_id: patientId,
       whatsapp_note: note,
+      ...(customDefs.length
+        ? { custom_values: JSON.stringify(buildCustomValues(customDefs, customVals)) }
+        : {}),
     } as unknown as Partial<Consultation>
     try {
       const result = await create.mutateAsync(payload)
@@ -158,7 +198,7 @@ export function ConsultationWizardPage() {
       if (e instanceof ApiClientError && e.code === 'NETWORK_ERROR') {
         await draft.clear()
         toast.info('Sin conexión: la consulta quedó en la cola de sincronización.')
-        navigate('/sync')
+        navigate('/settings')
       } else {
         toast.error((e as Error).message)
       }
@@ -258,6 +298,14 @@ export function ConsultationWizardPage() {
               ))}
             </Select>
           </Field>
+
+          {customDefs.length > 0 && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+              <h2 className="mb-2 text-sm font-semibold text-primary">Campos de la plantilla</h2>
+              <CustomFieldInputs defs={customDefs} values={customVals} onChange={setCustomVal} />
+            </div>
+          )}
+
           <ClinicalTextarea
             label="Motivo de consulta"
             value={(form.reason as string) ?? ''}
@@ -385,10 +433,9 @@ export function ConsultationWizardPage() {
             showPhrases
           />
           <Field label="Fecha de seguimiento">
-            <Input
-              type="date"
+            <DateInput
               value={(form.follow_up_date as string) ?? ''}
-              onChange={(e) => set('follow_up_date', e.target.value)}
+              onChange={(v) => set('follow_up_date', v)}
             />
           </Field>
         </div>
@@ -411,7 +458,7 @@ export function ConsultationWizardPage() {
             </summary>
             <div className="mt-2">
               <LazyClinicalNoteCard
-                consultation={form as Partial<Consultation>}
+                consultation={consultationWithCustom}
                 patient={patient}
                 settings={settings.data}
               />

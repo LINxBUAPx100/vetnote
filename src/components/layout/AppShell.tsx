@@ -8,7 +8,6 @@ import {
   Users,
   FileText,
   Pill,
-  RefreshCw,
   Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
@@ -20,7 +19,6 @@ const desktopNav = [
   { to: '/consultations', label: 'Consultas', icon: Stethoscope },
   { to: '/templates', label: 'Plantillas', icon: FileText },
   { to: '/medications', label: 'Medicamentos', icon: Pill },
-  { to: '/sync', label: 'Sincronización', icon: RefreshCw },
   { to: '/settings', label: 'Configuración', icon: Settings },
 ]
 

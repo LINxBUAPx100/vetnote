@@ -1,16 +1,31 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, User, Pencil, Phone, MessageCircle, PawPrint, Mail, MapPin } from 'lucide-react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  ArrowLeft,
+  User,
+  Pencil,
+  Phone,
+  PawPrint,
+  Mail,
+  MapPin,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Skeleton, ErrorState, EmptyState } from '@/components/feedback/States'
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
+import { WhatsAppMenu } from '@/components/WhatsAppMenu'
 import { ownerService } from '@/services/ownerService'
 import { patientService } from '@/services/patientService'
+import { toast } from '@/stores/uiStore'
 import { phoneDigits } from '@/utils/format'
 
 /** Vista de un tutor: datos de contacto + sus mascotas. */
 export function OwnerDetailPage() {
   const { ownerId } = useParams()
   const navigate = useNavigate()
+  const qc = useQueryClient()
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const owner = useQuery({
     queryKey: ['owner', ownerId],
     queryFn: () => ownerService.get(ownerId!),
@@ -22,12 +37,27 @@ export function OwnerDetailPage() {
     enabled: Boolean(ownerId),
   })
 
+  const remove = useMutation({
+    mutationFn: () => ownerService.softDelete(ownerId!),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['owners'] })
+      toast.success('Tutor eliminado')
+      navigate('/owners')
+    },
+    onError: (e) => {
+      setConfirmDelete(false)
+      toast.error((e as Error).message)
+    },
+  })
+
   if (owner.isLoading) return <Skeleton className="mt-6 h-40" />
   if (owner.isError) return <ErrorState message={(owner.error as Error).message} onRetry={owner.refetch} />
   if (!owner.data) return null
 
   const o = owner.data
   const phone = phoneDigits(o.phone)
+  const petCount = pets.data?.results.length ?? 0
+  const hasPets = petCount > 0
 
   return (
     <div className="space-y-5 pb-6">
@@ -72,10 +102,22 @@ export function OwnerDetailPage() {
         <Button variant="ghost" onClick={() => navigate(`/owners/${o.owner_id}/edit`)}>
           <Pencil className="h-4 w-4" /> Editar
         </Button>
-        {phone && (
-          <a href={`https://wa.me/${phone}`} target="_blank" rel="noreferrer" className="btn-ghost">
-            <MessageCircle className="h-4 w-4" /> WhatsApp
-          </a>
+        {phone && <WhatsAppMenu phone={phone} ownerName={o.full_name} />}
+      </div>
+
+      <div>
+        <Button
+          variant="danger"
+          className="w-full"
+          disabled={hasPets}
+          onClick={() => setConfirmDelete(true)}
+        >
+          <Trash2 className="h-4 w-4" /> Eliminar tutor
+        </Button>
+        {hasPets && (
+          <p className="mt-1 text-center text-xs text-content-muted">
+            No se puede eliminar: tiene {petCount} mascota(s). Elimina primero sus mascotas.
+          </p>
         )}
       </div>
 
@@ -106,6 +148,17 @@ export function OwnerDetailPage() {
           ))}
         </ul>
       </section>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        danger
+        title={`¿Eliminar a ${o.full_name}?`}
+        description="El tutor se dará de baja. Esta acción se puede revertir desde la hoja de cálculo si es necesario."
+        confirmLabel="Eliminar"
+        loading={remove.isPending}
+        onConfirm={() => remove.mutate()}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   )
 }

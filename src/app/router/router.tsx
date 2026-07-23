@@ -1,5 +1,6 @@
 import { createHashRouter, Navigate } from 'react-router-dom'
 import { AppShell } from '@/components/layout/AppShell'
+import { RouteError } from '@/components/feedback/RouteError'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { PatientsListPage } from '@/features/patients/PatientsListPage'
 import { PatientFormPage } from '@/features/patients/PatientFormPage'
@@ -16,7 +17,6 @@ import { ConsultationEditPage } from '@/features/consultations/ConsultationEditP
 import { TemplatesPage } from '@/features/templates/TemplatesPage'
 import { TemplateEditPage } from '@/features/templates/TemplateEditPage'
 import { MedicationsPage } from '@/features/medications/MedicationsPage'
-import { SyncPage } from '@/features/sync/SyncPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 
 /**
@@ -27,6 +27,7 @@ export const router = createHashRouter([
   {
     path: '/',
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'patients', element: <PatientsListPage /> },
@@ -48,7 +49,7 @@ export const router = createHashRouter([
       { path: 'medications/new', element: <MedicationEditPage /> },
       { path: 'medications/:medicationId/edit', element: <MedicationEditPage /> },
       { path: 'more', element: <MorePage /> },
-      { path: 'sync', element: <SyncPage /> },
+      { path: 'sync', element: <Navigate to="/settings" replace /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
