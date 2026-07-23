@@ -1,8 +1,12 @@
 import {
   forwardRef,
+  cloneElement,
+  isValidElement,
+  useId,
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
   type SelectHTMLAttributes,
+  type ReactElement,
   type ReactNode,
 } from 'react'
 import { cn } from '@/lib/cn'
@@ -19,9 +23,13 @@ export function Label({ children, htmlFor, hint }: { children: ReactNode; htmlFo
   )
 }
 
-export function FieldError({ message }: { message?: string }) {
+export function FieldError({ message, id }: { message?: string; id?: string }) {
   if (!message) return null
-  return <p className="mt-1 text-xs text-error">{message}</p>
+  return (
+    <p id={id} className="mt-1 text-xs text-error">
+      {message}
+    </p>
+  )
 }
 
 interface FieldProps {
@@ -31,16 +39,35 @@ interface FieldProps {
   children: ReactNode
   id?: string
 }
+
+/**
+ * Envuelve un control de formulario asociando su <label> (htmlFor/id) y su
+ * mensaje de error (aria-describedby) automáticamente. Así todos los campos
+ * quedan accesibles sin repetir ids en cada llamada.
+ */
 export function Field({ label, error, hint, children, id }: FieldProps) {
+  const autoId = useId()
+  const fieldId = id ?? autoId
+  const errorId = `${fieldId}-error`
+
+  const control =
+    isValidElement(children) && (children.props as { id?: string }).id === undefined
+      ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+          id: fieldId,
+          'aria-invalid': error ? true : undefined,
+          'aria-describedby': error ? errorId : undefined,
+        })
+      : children
+
   return (
     <div>
       {label && (
-        <Label htmlFor={id} hint={hint}>
+        <Label htmlFor={fieldId} hint={hint}>
           {label}
         </Label>
       )}
-      {children}
-      <FieldError message={error} />
+      {control}
+      <FieldError id={errorId} message={error} />
     </div>
   )
 }

@@ -80,6 +80,17 @@ var HEADERS = {
   ],
 }
 
+/**
+ * Columnas realmente numéricas. El resto de valores numéricos que devuelva
+ * Sheets (p.ej. teléfonos de solo dígitos) se convierten a texto al leer.
+ */
+var NUMERIC_FIELDS = {
+  weight: true,
+  temperature: true,
+  heart_rate: true,
+  respiratory_rate: true,
+}
+
 /** Columna identificadora por hoja (para búsquedas por id). */
 var ID_COLUMN = {
   Patients: 'patient_id',

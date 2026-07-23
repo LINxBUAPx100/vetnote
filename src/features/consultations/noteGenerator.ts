@@ -55,15 +55,16 @@ export function generateWhatsAppNote(input: NoteInput, options: NoteOptions = {}
 
   // Examen físico
   const exam: string[] = []
-  const cabeza = c.head_neck?.trim()
-  const torax = c.thorax_forelimbs?.trim()
-  const abdomen = c.abdomen_hindlimbs_anus_tail?.trim()
-  if (cabeza || torax || abdomen || c.additional_exam?.trim()) {
+  const cabeza = str(c.head_neck)
+  const torax = str(c.thorax_forelimbs)
+  const abdomen = str(c.abdomen_hindlimbs_anus_tail)
+  const adicional = str(c.additional_exam)
+  if (cabeza || torax || abdomen || adicional) {
     exam.push('*🩺 Examen físico:*')
     if (cabeza) exam.push(`\n_Cabeza y cuello:_\n${cabeza}`)
     if (torax) exam.push(`\n_Tórax y MAs:_\n${torax}`)
     if (abdomen) exam.push(`\n_Abdomen, MPs, ano y cola:_\n${abdomen}`)
-    if (c.additional_exam?.trim()) exam.push(`\n_Hallazgos adicionales:_\n${c.additional_exam.trim()}`)
+    if (adicional) exam.push(`\n_Hallazgos adicionales:_\n${adicional}`)
     parts.push(exam.join('\n'))
   }
 
@@ -89,13 +90,27 @@ export function generateWhatsAppNote(input: NoteInput, options: NoteOptions = {}
   return parts.join('\n\n').trim()
 }
 
-function pushBlock(parts: string[], title: string, value?: string, onlyIfPresent = false): void {
-  const v = value?.trim()
+/**
+ * Coerce a texto de forma segura. Google Sheets puede devolver campos que solo
+ * contienen dígitos como número; String() evita "x.trim is not a function".
+ */
+function str(value?: string | number | null): string {
+  return value === null || value === undefined ? '' : String(value).trim()
+}
+
+function pushBlock(
+  parts: string[],
+  title: string,
+  value?: string | number | null,
+  onlyIfPresent = false,
+): void {
+  const v = str(value)
   if (onlyIfPresent && !v) return
   parts.push(v ? `${title}\n${v}` : title)
 }
 
 function capitalize(s?: string): string {
-  if (!s) return ''
-  return s.charAt(0).toUpperCase() + s.slice(1)
+  const v = str(s)
+  if (!v) return ''
+  return v.charAt(0).toUpperCase() + v.slice(1)
 }

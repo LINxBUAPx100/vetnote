@@ -135,10 +135,25 @@ function InlineOwnerForm({
     onError: (e) => toast.error((e as Error).message),
   })
 
+  // IMPORTANTE: NO usar <form> aquí. Este componente se renderiza dentro del
+  // <form> del paciente y los formularios anidados son HTML inválido (el botón
+  // acabaría enviando el formulario externo). Se envía con onClick + handleSubmit.
+  const submitTutor = handleSubmit((d) => create.mutate(d))
+
   return (
-    <form onSubmit={handleSubmit((d) => create.mutate(d))} className="space-y-2">
+    <div className="space-y-2">
       <Field label="Nombre completo" error={errors.full_name?.message}>
-        <Input {...register('full_name')} placeholder="Laura Pérez" autoFocus />
+        <Input
+          {...register('full_name')}
+          placeholder="Laura Pérez"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              void submitTutor()
+            }
+          }}
+        />
       </Field>
       <div className="grid grid-cols-2 gap-2">
         <Field label="Teléfono" error={errors.phone?.message}>
@@ -149,13 +164,13 @@ function InlineOwnerForm({
         </Field>
       </div>
       <div className="flex gap-2 pt-1">
-        <Button type="submit" loading={create.isPending} className="flex-1">
+        <Button type="button" onClick={() => void submitTutor()} loading={create.isPending} className="flex-1">
           Guardar tutor
         </Button>
         <Button type="button" variant="ghost" onClick={onCancel} className="px-3">
           <X className="h-4 w-4" />
         </Button>
       </div>
-    </form>
+    </div>
   )
 }

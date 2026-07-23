@@ -28,7 +28,14 @@ var SheetRepository = (function () {
     var rows = values.map(function (row, i) {
       var obj = { __rowIndex: i + 2 } // fila real en la hoja (solo uso interno)
       for (var c = 0; c < headers.length; c++) {
-        obj[headers[c]] = row[c]
+        var h = headers[c]
+        var val = row[c]
+        // Google Sheets devuelve como NÚMERO cualquier celda que solo tenga
+        // dígitos (p.ej. un teléfono "9984605333"). Para las columnas de texto
+        // forzamos String, evitando errores tipo "x.replace is not a function"
+        // en el cliente. Los campos numéricos reales se conservan como número.
+        if (typeof val === 'number' && !NUMERIC_FIELDS[h]) val = String(val)
+        obj[h] = val
       }
       return obj
     })

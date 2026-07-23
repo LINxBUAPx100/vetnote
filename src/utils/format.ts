@@ -16,7 +16,11 @@ export function formatDateTime(value?: string): string {
   return formatDate(value, "d MMM yyyy, HH:mm")
 }
 
-/** Normaliza un teléfono a solo dígitos para enlaces tel:/wa.me. */
-export function phoneDigits(phone?: string): string {
-  return (phone ?? '').replace(/\D/g, '')
+/**
+ * Normaliza un teléfono a solo dígitos para enlaces tel:/wa.me.
+ * Google Sheets puede devolver un teléfono formado solo por dígitos como NÚMERO,
+ * por eso forzamos String() antes de operar (evita "replace is not a function").
+ */
+export function phoneDigits(phone?: string | number | null): string {
+  return String(phone ?? '').replace(/\D/g, '')
 }
