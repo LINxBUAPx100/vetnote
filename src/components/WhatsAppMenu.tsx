@@ -19,32 +19,32 @@ const TEMPLATES: MsgTemplate[] = [
   {
     label: '🏥 Recibimos a la mascota',
     build: (c) =>
-      `Hola ${c.owner}, le confirmamos que ${c.pet} ingresó a ${c.clinic} y ya está siendo atendido/a. Le mantendremos informado/a. 🐾`,
+      `Hola ${c.owner}, le confirmamos que ${c.pet} ingresó a ${c.clinic} y ya está siendo atendido/a. Le mantendremos informado/a.`,
   },
   {
     label: '✅ Listo para dar de alta',
     build: (c) =>
-      `Hola ${c.owner}, ${c.pet} ya está listo/a para irse a casa. Puede pasar por él/ella cuando guste. ¡Le esperamos! 🐾`,
+      `Hola ${c.owner}, ${c.pet} ya está listo/a para irse a casa. Puede pasar por él/ella cuando guste. ¡Le esperamos!`,
   },
   {
     label: '📅 Recordatorio de cita',
     build: (c) =>
-      `Hola ${c.owner}, le recordamos la próxima cita de ${c.pet} en ${c.clinic}. ¿Nos confirma su asistencia? 🙌`,
+      `Hola ${c.owner}, le recordamos la próxima cita de ${c.pet} en ${c.clinic}. ¿Nos confirma su asistencia?`,
   },
   {
     label: '💉 Recordatorio de vacuna / desparasitación',
     build: (c) =>
-      `Hola ${c.owner}, ${c.pet} tiene pendiente su vacuna/desparasitación. ¿Le agendamos una cita? 🩺`,
+      `Hola ${c.owner}, ${c.pet} tiene pendiente su vacuna/desparasitación. ¿Le agendamos una cita? `,
   },
   {
     label: '🔬 Resultados listos',
     build: (c) =>
-      `Hola ${c.owner}, ya tenemos los resultados de ${c.pet}. Con gusto se los explicamos, contáctenos cuando pueda. 📋`,
+      `Hola ${c.owner}, ya tenemos los resultados de ${c.pet}. Con gusto se los explicamos, contáctenos cuando pueda.`,
   },
   {
     label: '❤️ Seguimiento post-consulta',
     build: (c) =>
-      `Hola ${c.owner}, ¿cómo sigue ${c.pet} después de la consulta? Quedamos atentos a cualquier duda. 🐾`,
+      `Hola ${c.owner}, ¿cómo sigue ${c.pet} después de la consulta? Quedamos atentos a cualquier duda.`,
   },
   {
     label: '💬 Mensaje en blanco',
