@@ -10,7 +10,7 @@
 | 5 | Plantillas + medicamentos + frases frecuentes | Aplicar/crear/duplicar plantilla | ✅ backend · ▶ frontend |
 | 6 | Sincronización: IndexedDB, cola, reintentos, conflictos, PWA update | Falla de red sin pérdida de datos; conflicto resuelto | ▶ |
 | 7 | Seguridad y auditoría: token, rate limit, auditoría, sanitización, baja lógica | Acciones auditadas; token válido | ✅ backend |
-| 8 | Calidad: pruebas, accesibilidad, rendimiento, responsive | Tests verdes; a11y básica | ▶ |
+| 8 | Calidad: pruebas, accesibilidad, rendimiento, responsive | Tests verdes; a11y básica | ✅ 19 tests · code-split · a11y básica |
 | 9 | Producción: deploy Apps Script + Pages, respaldo, manual | App instalable en producción | ▶ |
 
 Leyenda: ✅ hecho · ▶ pendiente/en curso.

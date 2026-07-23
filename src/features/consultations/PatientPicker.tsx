@@ -23,6 +23,7 @@ export function PatientPicker({ onSelect }: { onSelect: (p: PatientSearchResult)
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar paciente por nombre o tutor…"
+          aria-label="Buscar paciente"
           autoFocus
           className="border-0 bg-transparent px-0 focus:ring-0"
         />

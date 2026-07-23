@@ -39,6 +39,7 @@ export function PatientsListPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar por nombre, tutor, teléfono, raza…"
+          aria-label="Buscar pacientes"
           className="border-0 bg-transparent px-0 focus:ring-0"
         />
       </label>

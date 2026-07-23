@@ -69,6 +69,7 @@ export function DashboardPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar paciente…"
+            aria-label="Buscar paciente"
             className="border-0 bg-transparent px-0 focus:ring-0"
           />
         </label>

@@ -77,6 +77,7 @@ export function OwnerPicker({ value, onChange }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Nombre o teléfono del tutor…"
+            aria-label="Buscar tutor"
             autoFocus
           />
           {results.isFetching && <Spinner className="mx-auto" />}
