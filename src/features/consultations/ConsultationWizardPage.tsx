@@ -195,15 +195,38 @@ export function ConsultationWizardPage() {
         <DraftBadge state={draft.state} pending={create.isPending} />
       </header>
 
-      {/* Barra de progreso */}
+      {/* Barra de progreso navegable: toca un tramo para saltar a ese paso.
+          Todos los pasos son opcionales; puedes ir directo a Revisión y guardar. */}
       <div className="flex gap-1">
-        {STEP_TITLES.map((_, i) => (
-          <div
-            key={i}
-            className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-primary' : 'bg-border'}`}
-          />
-        ))}
+        {STEP_TITLES.map((title, i) => {
+          // No se puede saltar de pasos si aún no hay paciente seleccionado.
+          const canJump = Boolean(patientId) && i >= (hasPreselected ? 1 : 0)
+          return (
+            <button
+              key={i}
+              type="button"
+              disabled={!canJump}
+              onClick={() => canJump && setStep(i)}
+              aria-label={`Ir a: ${title}`}
+              aria-current={i === step ? 'step' : undefined}
+              className={`h-2 flex-1 rounded-full transition-colors ${
+                i <= step ? 'bg-primary' : 'bg-border'
+              } ${canJump ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+            />
+          )
+        })}
       </div>
+
+      {/* Atajo: saltar directo a revisión para guardar sin recorrer los pasos. */}
+      {patientId && step > 0 && step < 5 && (
+        <button
+          type="button"
+          onClick={() => setStep(5)}
+          className="text-sm font-medium text-primary"
+        >
+          Omitir e ir a revisión →
+        </button>
+      )}
 
       {/* Contenido por paso */}
       {step === 0 && (

@@ -54,8 +54,17 @@ export function PatientDetailPage() {
               <p className="text-sm text-content-muted">Peso: {p.weight} kg</p>
             )}
             {owner && (
-              <p className="mt-1 text-sm">
-                Tutor: <span className="font-medium">{owner.full_name}</span>
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
+                <span>
+                  Tutor: <span className="font-medium">{owner.full_name}</span>
+                  {owner.phone ? ` · ${owner.phone}` : ''}
+                </span>
+                <Link
+                  to={`/owners/${owner.owner_id}/edit`}
+                  className="inline-flex items-center gap-1 font-medium text-primary"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Editar tutor
+                </Link>
               </p>
             )}
           </div>
