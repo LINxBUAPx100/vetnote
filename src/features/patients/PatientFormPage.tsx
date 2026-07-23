@@ -46,7 +46,7 @@ export function PatientFormPage() {
         birth_date: p.birth_date ?? '',
         approximate_age: p.approximate_age ?? '',
         color: p.color ?? '',
-        weight: p.weight ?? '',
+        weight: p.weight,
         sterilized: Boolean(p.sterilized),
         microchip: p.microchip ?? '',
         clinical_notes: p.clinical_notes ?? '',
@@ -61,7 +61,8 @@ export function PatientFormPage() {
   }, [owner, setValue])
 
   const onSubmit = async (data: PatientForm) => {
-    const payload = { ...data, weight: data.weight === '' ? undefined : data.weight }
+    // El esquema ya normaliza: weight -> number|undefined, sex -> valor|undefined.
+    const payload = { ...data }
     try {
       if (isEdit && patientId) {
         await update.mutateAsync({

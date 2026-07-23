@@ -15,18 +15,27 @@ export type OwnerForm = z.infer<typeof ownerSchema>
 export const speciesEnum = z.enum(['canino', 'felino', 'otro'])
 export const sexEnum = z.enum(['macho', 'hembra', 'desconocido'])
 
+// Un <select> con opción "—" devuelve '' (cadena vacía). Para campos opcionales
+// tratamos '' como "sin valor" (undefined) antes de validar el enum.
+const emptyToUndefined = (v: unknown) => (v === '' || v === null ? undefined : v)
+
+// Número opcional: '' o null -> undefined; cualquier otra cosa se convierte a número.
+const optionalNumber = (message?: string) =>
+  z.preprocess(
+    (v) => (v === '' || v === null || v === undefined ? undefined : Number(v)),
+    z.number({ invalid_type_error: 'Debe ser un número' }).nonnegative(message).optional(),
+  )
+
 export const patientSchema = z.object({
   name: z.string().trim().min(1, 'El nombre del paciente es obligatorio').max(100),
   species: speciesEnum,
   owner_id: z.string().min(1, 'Debes seleccionar o crear un tutor'),
   breed: optionalText(80),
-  sex: sexEnum.optional(),
+  sex: z.preprocess(emptyToUndefined, sexEnum.optional()),
   birth_date: optionalText(30),
   approximate_age: optionalText(40),
   color: optionalText(60),
-  weight: z
-    .union([z.coerce.number().nonnegative('El peso no puede ser negativo'), z.literal('')])
-    .optional(),
+  weight: optionalNumber('El peso no puede ser negativo'),
   sterilized: z.boolean().optional(),
   microchip: optionalText(60),
   clinical_notes: optionalText(),
