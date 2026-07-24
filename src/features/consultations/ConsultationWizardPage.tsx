@@ -2,10 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Save, Cloud, CloudOff, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Field, Input, Select, DateInput } from '@/components/ui/Field'
+import { Field, Input, Select, DateInput, DateTimeInput } from '@/components/ui/Field'
 import { Spinner } from '@/components/feedback/States'
 import { ClinicalTextarea } from './ClinicalTextarea'
 import { CustomFieldInputs } from './CustomFieldInputs'
+import { TreatmentBuilder } from './TreatmentBuilder'
+import type { TreatmentItem } from './treatment'
+import { nowDateTimeLocalValue, fromDateTimeLocalValue } from '@/utils/format'
 import {
   parseFieldDefs,
   buildCustomValues,
@@ -80,21 +83,26 @@ export function ConsultationWizardPage() {
   const create = useCreateConsultation()
 
   const [step, setStep] = useState(hasPreselected ? 1 : 0)
-  const [form, setForm] = useState<FormData>({ consultation_type: 'consulta' })
+  const [form, setForm] = useState<FormData>({
+    consultation_type: 'consulta',
+    attended_at: fromDateTimeLocalValue(nowDateTimeLocalValue()),
+  })
   const [customDefs, setCustomDefs] = useState<CustomFieldDef[]>([])
   const [customVals, setCustomVals] = useState<Record<string, string>>({})
+  const [treatmentItems, setTreatmentItems] = useState<TreatmentItem[]>([])
   const [saved, setSaved] = useState<Consultation | null>(null)
 
   // Carga el borrador cuando esté listo (separa los campos personalizados).
   useEffect(() => {
     if (draft.ready && draft.initial) {
       const init = draft.initial as Record<string, unknown>
-      const { __customDefs, __customVals, ...formPart } = init
+      const { __customDefs, __customVals, __treatmentItems, ...formPart } = init
       setForm((f) => ({ ...f, ...(formPart as FormData) }))
       if (Array.isArray(__customDefs)) setCustomDefs(__customDefs as CustomFieldDef[])
       if (__customVals && typeof __customVals === 'object') {
         setCustomVals(__customVals as Record<string, string>)
       }
+      if (Array.isArray(__treatmentItems)) setTreatmentItems(__treatmentItems as TreatmentItem[])
     }
   }, [draft.ready, draft.initial])
 
@@ -105,8 +113,9 @@ export function ConsultationWizardPage() {
       ...form,
       __customDefs: customDefs,
       __customVals: customVals,
+      __treatmentItems: treatmentItems,
     } as unknown as Partial<ConsultationForm>)
-  }, [form, customDefs, customVals, draft.ready, draft.save])
+  }, [form, customDefs, customVals, treatmentItems, draft.ready, draft.save])
 
   // Si es un seguimiento, marca el tipo y enlaza con la consulta previa.
   useEffect(() => {
@@ -154,8 +163,9 @@ export function ConsultationWizardPage() {
       ({
         ...form,
         custom_values: JSON.stringify(buildCustomValues(customDefs, customVals)),
+        treatment_items: JSON.stringify(treatmentItems),
       }) as Partial<Consultation>,
-    [form, customDefs, customVals],
+    [form, customDefs, customVals, treatmentItems],
   )
 
   const note = useMemo(
@@ -179,7 +189,8 @@ export function ConsultationWizardPage() {
 
   const save = async () => {
     if (!patientId) return toast.error('Selecciona un paciente primero')
-    if (isConsultationEmpty(form)) return toast.error('La consulta no puede estar vacía')
+    if (isConsultationEmpty(form) && treatmentItems.length === 0)
+      return toast.error('La consulta no puede estar vacía')
     // El backend sanea y convierte tipos; enviamos el formulario tal cual.
     const payload = {
       ...form,
@@ -188,6 +199,7 @@ export function ConsultationWizardPage() {
       ...(customDefs.length
         ? { custom_values: JSON.stringify(buildCustomValues(customDefs, customVals)) }
         : {}),
+      ...(treatmentItems.length ? { treatment_items: JSON.stringify(treatmentItems) } : {}),
     } as unknown as Partial<Consultation>
     try {
       const result = await create.mutateAsync(payload)
@@ -205,6 +217,23 @@ export function ConsultationWizardPage() {
     }
   }
 
+  // Reinicia el wizard en el sitio (sin recargar la página) para encadenar
+  // consultas o seguimientos del mismo paciente.
+  const resetForNew = (followUpId?: string) => {
+    setForm({
+      consultation_type: followUpId ? 'follow_up' : 'consulta',
+      ...(followUpId ? { parent_consultation_id: followUpId } : {}),
+      attended_at: fromDateTimeLocalValue(nowDateTimeLocalValue()),
+    })
+    setCustomDefs([])
+    setCustomVals({})
+    setTreatmentItems([])
+    setSaved(null)
+    setStep(1)
+    void draft.clear()
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0 })
+  }
+
   // Pantalla post-guardado (comportamiento recursivo, ver docs).
   if (saved && patient) {
     return (
@@ -213,6 +242,8 @@ export function ConsultationWizardPage() {
         consultation={saved}
         patient={patient}
         settings={settings.data}
+        onNewConsultation={() => resetForNew()}
+        onFollowUp={() => resetForNew(saved.consultation_id)}
       />
     )
   }
@@ -281,6 +312,12 @@ export function ConsultationWizardPage() {
 
       {step === 1 && (
         <div className="space-y-3">
+          <Field label="Hora de atención">
+            <DateTimeInput
+              value={(form.attended_at as string) ?? ''}
+              onChange={(v) => set('attended_at', v)}
+            />
+          </Field>
           <Field label="Plantilla (opcional)">
             <Select
               onChange={(e) => {
@@ -421,10 +458,15 @@ export function ConsultationWizardPage() {
             value={(form.differential_diagnosis as string) ?? ''}
             onChange={(v) => set('differential_diagnosis', v)}
           />
+          <div>
+            <label className="mb-1 block text-sm font-medium">Tratamiento (medicamentos)</label>
+            <TreatmentBuilder items={treatmentItems} onChange={setTreatmentItems} />
+          </div>
           <ClinicalTextarea
-            label="Tratamiento"
+            label="Indicaciones adicionales de tratamiento"
             value={(form.treatment as string) ?? ''}
             onChange={(v) => set('treatment', v)}
+            placeholder="Reposo, dieta blanda, control de signos…"
           />
           <ClinicalTextarea
             label="Recomendaciones"
@@ -460,6 +502,7 @@ export function ConsultationWizardPage() {
               <LazyClinicalNoteCard
                 consultation={consultationWithCustom}
                 patient={patient}
+                owner={patient?.ownerName ? { full_name: patient.ownerName } : null}
                 settings={settings.data}
               />
             </div>

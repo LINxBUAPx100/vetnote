@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useLiveQuery } from 'dexie-react-hooks'
 import {
   Plus,
   Search,
   CheckCircle2,
   Stethoscope,
-  RefreshCw,
   Calendar,
+  CalendarClock,
   PawPrint,
   Users,
 } from 'lucide-react'
@@ -17,11 +16,11 @@ import { Input } from '@/components/ui/Field'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useSearchPatients } from '@/features/patients/hooks'
 import { useRecentConsultations } from '@/features/consultations/hooks'
+import { useAppointments } from '@/features/agenda/hooks'
 import { consultationService } from '@/services/consultationService'
 import { patientService } from '@/services/patientService'
 import { ownerService } from '@/services/ownerService'
-import { db } from '@/database/localDb'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatDateTime } from '@/utils/format'
 
 function useStats() {
   const consultations = useQuery({
@@ -53,11 +52,11 @@ export function DashboardPage() {
   const search = useSearchPatients(debounced)
   const stats = useStats()
   const recent = useRecentConsultations(5)
-  const pending = useLiveQuery(
-    () => db.syncQueue.where('status').notEqual('synced').count(),
-    [],
-    0,
-  )
+  const appointments = useAppointments()
+  const nowIso = new Date().toISOString()
+  const upcoming = (appointments.data?.results ?? [])
+    .filter((a) => a.state === 'scheduled' && a.scheduled_at >= nowIso)
+    .slice(0, 3)
 
   return (
     <div className="space-y-5">
@@ -115,14 +114,31 @@ export function DashboardPage() {
         </div>
       )}
 
-      {pending > 0 && (
-        <Link to="/settings" className="card flex items-center gap-3 p-3">
-          <RefreshCw className="h-5 w-5 text-warning" />
-          <div className="flex-1">
-            <p className="font-medium">Pendientes de sincronizar</p>
-            <p className="text-sm text-content-muted">{pending} registro(s)</p>
+      {upcoming.length > 0 && (
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-content-muted">Próximas citas</h2>
+            <Link to="/agenda" className="text-sm font-medium text-primary">
+              Ver agenda
+            </Link>
           </div>
-        </Link>
+          <ul className="space-y-2">
+            {upcoming.map((a) => (
+              <li key={a.appointment_id}>
+                <Link
+                  to={`/appointments/${a.appointment_id}/edit`}
+                  className="card flex items-center gap-3 p-3 hover:bg-background"
+                >
+                  <CalendarClock className="h-4 w-4 text-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{a.title}</p>
+                    <p className="text-xs text-content-muted">{formatDateTime(a.scheduled_at)}</p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <section>

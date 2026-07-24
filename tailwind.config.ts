@@ -9,31 +9,36 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#2F6F64',
-          dark: '#24584F',
+          DEFAULT: '#3A8FE0',
+          dark: '#2B72BF',
+          light: '#8FC3F2',
         },
-        secondary: '#5B7FA3',
-        accent: '#D99A4E',
-        background: '#F5F7F6',
+        secondary: '#6FB1EE',
+        accent: '#FFB020',
+        background: '#EEF5FD',
         surface: '#FFFFFF',
         content: {
-          DEFAULT: '#1F2933',
-          muted: '#667085',
+          DEFAULT: '#122740',
+          muted: '#5A7189',
         },
-        border: '#DDE3E1',
-        success: '#348A5B',
-        warning: '#C98624',
-        error: '#C94A4A',
+        border: '#D6E4F3',
+        success: '#2FA36B',
+        warning: '#E8940C',
+        error: '#E5484D',
       },
       fontFamily: {
         sans: ['Inter', 'Manrope', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
-        card: '16px',
+        card: '20px',
       },
       boxShadow: {
-        card: '0 1px 2px rgba(31, 41, 51, 0.04), 0 2px 8px rgba(31, 41, 51, 0.04)',
-        floating: '0 6px 20px rgba(31, 41, 51, 0.12)',
+        card: '0 1px 2px rgba(24, 71, 122, 0.05), 0 6px 18px rgba(24, 71, 122, 0.06)',
+        floating: '0 10px 28px rgba(24, 71, 122, 0.22)',
+      },
+      backgroundImage: {
+        'brand-gradient': 'linear-gradient(135deg, #3A8FE0 0%, #5BA6EC 55%, #6FB1EE 100%)',
+        'brand-soft': 'linear-gradient(135deg, #EEF5FD 0%, #E3F0FC 100%)',
       },
       spacing: {
         touch: '44px', // área táctil mínima

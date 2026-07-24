@@ -9,14 +9,18 @@ import {
   FileText,
   Pill,
   Settings,
+  CalendarClock,
+  IdCard,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 const desktopNav = [
   { to: '/', label: 'Inicio', icon: Home, end: true },
   { to: '/patients', label: 'Pacientes', icon: PawPrint },
-  { to: '/owners', label: 'Tutores', icon: Users },
+  { to: '/agenda', label: 'Agenda', icon: CalendarClock },
   { to: '/consultations', label: 'Consultas', icon: Stethoscope },
+  { to: '/carnet', label: 'Carnet', icon: IdCard },
+  { to: '/owners', label: 'Tutores', icon: Users },
   { to: '/templates', label: 'Plantillas', icon: FileText },
   { to: '/medications', label: 'Medicamentos', icon: Pill },
   { to: '/settings', label: 'Configuración', icon: Settings },
@@ -31,7 +35,7 @@ export function AppShell() {
       {/* Sidebar (escritorio) */}
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-border bg-surface p-4 md:flex">
         <div className="mb-6 flex items-center gap-2 px-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-[0_4px_12px_rgba(58,143,224,0.35)]">
             <Stethoscope className="h-5 w-5" />
           </div>
           <span className="text-lg font-bold">VetNote</span>
@@ -75,11 +79,11 @@ export function AppShell() {
           className="flex flex-col items-center justify-center gap-0.5 py-2"
           aria-label="Nueva consulta"
         >
-          <span className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-floating">
+          <span className="-mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-brand-gradient text-white shadow-floating">
             <Plus className="h-7 w-7" />
           </span>
         </button>
-        <BottomLink to="/consultations" label="Consultas" icon={Stethoscope} />
+        <BottomLink to="/agenda" label="Agenda" icon={CalendarClock} />
         <BottomLink to="/more" label="Más" icon={Menu} />
       </nav>
     </div>

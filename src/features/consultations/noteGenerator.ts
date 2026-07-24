@@ -1,6 +1,16 @@
 import type { Consultation, Patient, Owner, ClinicSettings } from '@/types/domain'
 import { formatDate } from '@/utils/format'
 import { parseCustomValues } from './customFields'
+import { parseTreatmentItems, formatTreatmentItem } from './treatment'
+
+/** Combina el tratamiento estructurado (medicamentos) con el texto libre. */
+export function composeTreatmentText(c: Partial<Consultation>): string {
+  const items = parseTreatmentItems(c.treatment_items)
+  const lines = items.map((it) => `• ${formatTreatmentItem(it)}`)
+  const free = c.treatment === undefined || c.treatment === null ? '' : String(c.treatment).trim()
+  if (free) lines.push(free)
+  return lines.join('\n')
+}
 
 /**
  * Genera el texto de la consulta con formato de WhatsApp.
@@ -69,7 +79,7 @@ export function generateWhatsAppNote(input: NoteInput, options: NoteOptions = {}
     parts.push(exam.join('\n'))
   }
 
-  pushBlock(parts, '*🩹 Tratamiento:*', c.treatment)
+  pushBlock(parts, '*🩹 Tratamiento:*', composeTreatmentText(c))
   pushBlock(parts, '*📌 Diagnóstico presuntivo:*', c.presumptive_diagnosis)
   pushBlock(parts, '*🔬 Diagnósticos diferenciales:*', c.differential_diagnosis, true)
   pushBlock(parts, '*📎 Recomendaciones:*', c.recommendations, true)

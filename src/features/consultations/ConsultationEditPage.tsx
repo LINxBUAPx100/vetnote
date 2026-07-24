@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Field, Input } from '@/components/ui/Field'
+import { Field, Input, DateTimeInput } from '@/components/ui/Field'
 import { Spinner, ErrorState } from '@/components/feedback/States'
 import { ClinicalTextarea } from './ClinicalTextarea'
+import { TreatmentBuilder } from './TreatmentBuilder'
+import { parseTreatmentItems, type TreatmentItem } from './treatment'
 import { NotePreview } from './NotePreview'
 import { generateWhatsAppNote } from './noteGenerator'
 import { parseCustomValues } from './customFields'
@@ -27,9 +29,13 @@ export function ConsultationEditPage() {
   const update = useUpdateConsultation()
 
   const [form, setForm] = useState<FormData>({})
+  const [treatmentItems, setTreatmentItems] = useState<TreatmentItem[]>([])
 
   useEffect(() => {
-    if (consultation.data) setForm(consultation.data)
+    if (consultation.data) {
+      setForm(consultation.data)
+      setTreatmentItems(parseTreatmentItems(consultation.data.treatment_items))
+    }
   }, [consultation.data])
 
   const set = (name: keyof FormData, value: unknown) =>
@@ -45,12 +51,15 @@ export function ConsultationEditPage() {
   const note = useMemo(
     () =>
       generateWhatsAppNote({
-        consultation: form as Partial<Consultation>,
+        consultation: {
+          ...form,
+          treatment_items: JSON.stringify(treatmentItems),
+        } as Partial<Consultation>,
         patient: patient.data,
         owner: patient.data?.owner,
         settings: settings.data,
       }),
-    [form, patient.data, settings.data],
+    [form, treatmentItems, patient.data, settings.data],
   )
 
   if (consultation.isLoading) return <Spinner className="mx-auto mt-10" />
@@ -59,12 +68,14 @@ export function ConsultationEditPage() {
   if (!consultation.data) return null
 
   const save = async () => {
-    if (isConsultationEmpty(form)) return toast.error('La consulta no puede estar vacía')
+    if (isConsultationEmpty(form) && treatmentItems.length === 0)
+      return toast.error('La consulta no puede estar vacía')
     try {
       await update.mutateAsync({
         payload: {
           ...form,
           consultation_id: consultation.data!.consultation_id,
+          treatment_items: JSON.stringify(treatmentItems),
           whatsapp_note: note,
         } as Partial<Consultation> & { consultation_id: string },
         expectedUpdatedAt: consultation.data!.updated_at,
@@ -92,6 +103,9 @@ export function ConsultationEditPage() {
         <h1 className="font-bold">Editar consulta</h1>
       </header>
 
+      <Field label="Hora de atención">
+        <DateTimeInput value={t('attended_at')} onChange={(v) => set('attended_at', v)} />
+      </Field>
       <ClinicalTextarea label="Motivo de consulta" value={t('reason')} onChange={(v) => set('reason', v)} />
       <ClinicalTextarea label="Anamnesis actual" value={t('current_anamnesis')} onChange={(v) => set('current_anamnesis', v)} />
       <div className="grid grid-cols-2 gap-3">
@@ -106,7 +120,11 @@ export function ConsultationEditPage() {
       <ClinicalTextarea label="Tórax y MAs" value={t('thorax_forelimbs')} onChange={(v) => set('thorax_forelimbs', v)} showPhrases />
       <ClinicalTextarea label="Abdomen, MPs, ano y cola" value={t('abdomen_hindlimbs_anus_tail')} onChange={(v) => set('abdomen_hindlimbs_anus_tail', v)} showPhrases />
       <ClinicalTextarea label="Diagnóstico presuntivo" value={t('presumptive_diagnosis')} onChange={(v) => set('presumptive_diagnosis', v)} />
-      <ClinicalTextarea label="Tratamiento" value={t('treatment')} onChange={(v) => set('treatment', v)} />
+      <div>
+        <label className="mb-1 block text-sm font-medium">Tratamiento (medicamentos)</label>
+        <TreatmentBuilder items={treatmentItems} onChange={setTreatmentItems} />
+      </div>
+      <ClinicalTextarea label="Indicaciones adicionales de tratamiento" value={t('treatment')} onChange={(v) => set('treatment', v)} />
       <ClinicalTextarea label="Recomendaciones" value={t('recommendations')} onChange={(v) => set('recommendations', v)} showPhrases />
 
       {parseCustomValues(form.custom_values).length > 0 && (

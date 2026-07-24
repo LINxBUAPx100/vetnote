@@ -18,6 +18,13 @@ import { TemplatesPage } from '@/features/templates/TemplatesPage'
 import { TemplateEditPage } from '@/features/templates/TemplateEditPage'
 import { MedicationsPage } from '@/features/medications/MedicationsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+import { StudyEditPage } from '@/features/studies/StudyEditPage'
+import { InjectionEditPage } from '@/features/injections/InjectionEditPage'
+import { CarnetHomePage } from '@/features/carnet/CarnetHomePage'
+import { CarnetPatientPage } from '@/features/carnet/CarnetPatientPage'
+import { CarnetEntryEditPage } from '@/features/carnet/CarnetEntryEditPage'
+import { AgendaPage } from '@/features/agenda/AgendaPage'
+import { AppointmentEditPage } from '@/features/agenda/AppointmentEditPage'
 
 /**
  * HashRouter: máxima compatibilidad con GitHub Pages sin reglas de reescritura
@@ -42,6 +49,17 @@ export const router = createHashRouter([
       { path: 'consultations/new', element: <ConsultationWizardPage /> },
       { path: 'consultations/:consultationId', element: <ConsultationDetailPage /> },
       { path: 'consultations/:consultationId/edit', element: <ConsultationEditPage /> },
+      { path: 'patients/:patientId/studies/new', element: <StudyEditPage /> },
+      { path: 'studies/:studyId/edit', element: <StudyEditPage /> },
+      { path: 'patients/:patientId/injections/new', element: <InjectionEditPage /> },
+      { path: 'injections/:injectionId/edit', element: <InjectionEditPage /> },
+      { path: 'carnet', element: <CarnetHomePage /> },
+      { path: 'carnet/:patientId', element: <CarnetPatientPage /> },
+      { path: 'carnet/:patientId/new', element: <CarnetEntryEditPage /> },
+      { path: 'carnet/entry/:entryId/edit', element: <CarnetEntryEditPage /> },
+      { path: 'agenda', element: <AgendaPage /> },
+      { path: 'appointments/new', element: <AppointmentEditPage /> },
+      { path: 'appointments/:appointmentId/edit', element: <AppointmentEditPage /> },
       { path: 'templates', element: <TemplatesPage /> },
       { path: 'templates/new', element: <TemplateEditPage /> },
       { path: 'templates/:templateId/edit', element: <TemplateEditPage /> },

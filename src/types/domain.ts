@@ -48,6 +48,10 @@ export interface Consultation {
   parent_consultation_id?: string
   consultation_type: ConsultationType
   consultation_date: string
+  /** Hora de atención (ISO datetime) registrada manual o automáticamente. */
+  attended_at?: string
+  /** Tratamiento estructurado (JSON de TreatmentItem[]). */
+  treatment_items?: string
   reason?: string
   remote_anamnesis?: string
   current_anamnesis?: string
@@ -111,6 +115,92 @@ export interface Medication {
   created_at: string
   updated_at: string
   status: RecordStatus
+}
+
+/** Estudio complementario (laboratorio, imagenología, etc.). */
+export interface Study {
+  study_id: string
+  patient_id: string
+  study_type?: string
+  study_date: string
+  attended_at?: string
+  request_reason?: string
+  findings?: string
+  interpretation?: string
+  notes?: string
+  created_at: string
+  updated_at: string
+  created_by?: string
+  status: RecordStatus
+}
+
+/** Registro de inyección / aplicación parenteral. */
+export interface Injection {
+  injection_id: string
+  patient_id: string
+  product: string
+  dose?: string
+  route?: string
+  site?: string
+  injection_date: string
+  attended_at?: string
+  lot?: string
+  next_due_date?: string
+  notes?: string
+  created_at: string
+  updated_at: string
+  created_by?: string
+  status: RecordStatus
+}
+
+export type CarnetCategory = 'vacuna' | 'desparasitacion' | 'otro'
+
+/** Entrada del carnet sanitario (vacunas, desparasitaciones, etc.). */
+export interface CarnetEntry {
+  entry_id: string
+  patient_id: string
+  category: CarnetCategory
+  product: string
+  lot?: string
+  manufacturer?: string
+  application_date: string
+  attended_at?: string
+  next_due_date?: string
+  notes?: string
+  created_at: string
+  updated_at: string
+  created_by?: string
+  status: RecordStatus
+}
+
+export type AppointmentState = 'scheduled' | 'done' | 'cancelled'
+
+/** Cita agendada (agenda). */
+export interface Appointment {
+  appointment_id: string
+  patient_id?: string
+  owner_id?: string
+  title: string
+  scheduled_at: string
+  duration_min?: number
+  reason?: string
+  notes?: string
+  state: AppointmentState
+  created_at: string
+  updated_at: string
+  created_by?: string
+  status: RecordStatus
+}
+
+/** Ítem de tratamiento estructurado (medicamento + posología). */
+export interface TreatmentItem {
+  name: string
+  medication_id?: string
+  dose?: string
+  route?: string
+  frequency?: string
+  duration?: string
+  notes?: string
 }
 
 export interface ClinicSettings {

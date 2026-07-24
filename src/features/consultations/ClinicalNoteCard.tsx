@@ -10,22 +10,19 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { toast } from '@/stores/uiStore'
-import { formatDate } from '@/utils/format'
+import { formatDate, formatTime } from '@/utils/format'
 import { parseCustomValues } from './customFields'
+import { parseTreatmentItems, formatTreatmentItem } from './treatment'
 import type { Consultation, Patient, Owner, ClinicSettings } from '@/types/domain'
 
-type Format = '1080x1350' | '1080x1920'
 type Variant = 'doctor' | 'tutor'
 
-const DIMENSIONS: Record<Format, { w: number; h: number }> = {
-  '1080x1350': { w: 1080, h: 1350 },
-  '1080x1920': { w: 1080, h: 1920 },
-}
-const PREVIEW_W = 300
-const ACCENT = '#2F6F64'
-const ACCENT_SOFT = '#EAF2F0'
-const INK = '#1F2933'
-const MUTED = '#667085'
+const WIDTH = 1080
+const PREVIEW_W = 320
+const ACCENT = '#3A8FE0'
+const ACCENT_SOFT = '#E7F1FC'
+const INK = '#122740'
+const MUTED = '#5A7189'
 
 interface Props {
   consultation: Partial<Consultation>
@@ -44,28 +41,30 @@ function firstName(full?: string): string {
 }
 
 /**
- * Imagen clínica descargable para compartir por WhatsApp. Dos variantes:
+ * Imagen clínica / receta descargable para compartir por WhatsApp. Dos variantes:
  *  - "doctor": todos los datos registrados de la consulta.
- *  - "tutor": resumen amable con lo que el tutor necesita ver.
+ *  - "tutor": receta amable con indicaciones para el tutor.
+ *
+ * El ALTO de la imagen es AUTOMÁTICO: crece con el contenido, así nada se corta.
  */
 export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: Props) {
-  const [fmt, setFmt] = useState<Format>('1080x1350')
   const [variant, setVariant] = useState<Variant>('doctor')
   const [generating, setGenerating] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
-  const dim = DIMENSIONS[fmt]
-  const scale = PREVIEW_W / dim.w
+  const scale = PREVIEW_W / WIDTH
   const accent = s(settings?.primary_color) || ACCENT
 
   const download = async () => {
     if (!cardRef.current) return
     setGenerating(true)
     try {
-      const dataUrl = await toPng(cardRef.current, {
-        width: dim.w,
-        height: dim.h,
+      const node = cardRef.current
+      const dataUrl = await toPng(node, {
+        width: WIDTH,
+        height: node.scrollHeight,
         pixelRatio: 2,
         cacheBust: true,
+        backgroundColor: '#ffffff',
         style: { transform: 'none', margin: '0' },
       })
       const link = document.createElement('a')
@@ -105,6 +104,17 @@ export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: 
     s(c.hydration) && `Hidratación: ${s(c.hydration)}`,
   ].filter(Boolean) as string[]
 
+  const treatmentItems = parseTreatmentItems(c.treatment_items)
+  const attendedTime = formatTime(c.attended_at)
+
+  // Pie con datos de la clínica, incluyendo la cédula profesional.
+  const footerParts = [
+    s(settings?.vet_name),
+    s(settings?.professional_id) ? `Cédula profesional: ${s(settings?.professional_id)}` : '',
+    s(settings?.phone),
+    s(settings?.address),
+  ].filter(Boolean)
+
   return (
     <div className="space-y-3">
       {/* Selector de destinatario */}
@@ -120,36 +130,25 @@ export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: 
           active={variant === 'tutor'}
           onClick={() => setVariant('tutor')}
           icon={HeartHandshake}
-          title="Para el tutor"
-          desc="Resumen amable"
+          title="Receta / tutor"
+          desc="Indicaciones amables"
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <select
-          value={fmt}
-          onChange={(e) => setFmt(e.target.value as Format)}
-          aria-label="Formato de imagen"
-          className="rounded-lg border border-border bg-surface px-2 py-2 text-sm"
-        >
-          <option value="1080x1350">Vertical 4:5 (WhatsApp)</option>
-          <option value="1080x1920">Story 9:16</option>
-        </select>
-        <Button onClick={download} loading={generating} className="flex-1">
-          <Download className="h-4 w-4" /> Descargar PNG
-        </Button>
-      </div>
+      <Button onClick={download} loading={generating} className="w-full">
+        <Download className="h-4 w-4" /> Descargar PNG
+      </Button>
 
-      {/* Vista previa escalada (el nodo real se exporta a tamaño completo). */}
+      {/* Vista previa escalada (el nodo real se exporta a tamaño completo, alto automático). */}
       <div
         className="mx-auto overflow-hidden rounded-xl border border-border shadow-card"
-        style={{ width: PREVIEW_W, height: Math.round(dim.h * scale) }}
+        style={{ width: PREVIEW_W }}
       >
-        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: WIDTH }}>
           <div
             ref={cardRef}
-            style={{ width: dim.w, height: dim.h, color: INK }}
-            className="flex flex-col overflow-hidden bg-white font-sans"
+            style={{ width: WIDTH, color: INK }}
+            className="flex flex-col bg-white font-sans"
           >
             {/* Encabezado */}
             <div style={{ background: accent }} className="px-14 pb-9 pt-12 text-white">
@@ -158,7 +157,7 @@ export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: 
                   🩺
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[46px] font-extrabold leading-tight">
+                  <p className="text-[46px] font-extrabold leading-tight">
                     {s(settings?.clinic_name) || 'VetNote'}
                   </p>
                   {s(settings?.vet_name) && (
@@ -166,21 +165,22 @@ export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: 
                   )}
                 </div>
                 <div className="text-right text-[24px] text-white/85">
-                  {formatDate(c.consultation_date) || formatDate(new Date().toISOString())}
+                  <p>{formatDate(c.consultation_date) || formatDate(new Date().toISOString())}</p>
+                  {attendedTime && <p>{attendedTime} h</p>}
                 </div>
               </div>
               <div className="mt-3 inline-flex rounded-full bg-white/15 px-5 py-2 text-[22px] font-semibold uppercase tracking-wide">
-                {variant === 'tutor' ? 'Resumen para el tutor' : 'Nota clínica'}
+                {variant === 'tutor' ? 'Receta / indicaciones' : 'Nota clínica'}
               </div>
             </div>
 
             {/* Banner del paciente */}
-            <div className="mx-14 -mt-6 rounded-2xl bg-white px-8 py-6 shadow-[0_10px_30px_rgba(31,41,51,0.12)]">
+            <div className="mx-14 -mt-6 rounded-2xl bg-white px-8 py-6 shadow-[0_10px_30px_rgba(24,71,122,0.14)]">
               <p className="text-[52px] font-bold leading-tight">{s(patient?.name) || 'Paciente'}</p>
               <p className="text-[26px]" style={{ color: MUTED }}>
                 {[meta, weight].filter(Boolean).join(' · ')}
               </p>
-              {variant === 'tutor' && s(owner?.full_name) && (
+              {s(owner?.full_name) && (
                 <p className="mt-1 text-[24px]" style={{ color: accent }}>
                   Tutor: {s(owner?.full_name)}
                 </p>
@@ -190,24 +190,26 @@ export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: 
             {/* Cuerpo clínico */}
             <div className="flex-1 space-y-6 px-14 pt-8 text-[30px] leading-snug">
               {variant === 'tutor' ? (
-                <TutorBody c={c} owner={owner} patient={patient} accent={accent} />
+                <TutorBody c={c} owner={owner} patient={patient} accent={accent} items={treatmentItems} />
               ) : (
-                <DoctorBody c={c} exam={exam} vitals={vitals} accent={accent} />
+                <DoctorBody c={c} exam={exam} vitals={vitals} accent={accent} items={treatmentItems} />
               )}
             </div>
 
             {/* Pie */}
             <div
-              className="mt-auto px-14 py-7 text-[24px]"
+              className="mt-8 px-14 py-8 text-[24px]"
               style={{ borderTop: `3px solid ${ACCENT_SOFT}`, color: MUTED }}
             >
               {variant === 'tutor' && (
-                <p className="mb-1 text-[26px] font-semibold" style={{ color: accent }}>
+                <p className="mb-2 text-[26px] font-semibold" style={{ color: accent }}>
                   Ante cualquier duda, contáctanos. ¡Gracias por confiar en nosotros!
                 </p>
               )}
-              {[s(settings?.phone), s(settings?.address)].filter(Boolean).join('  ·  ')}
-              {s(settings?.note_footer) ? ` — ${s(settings?.note_footer)}` : ''}
+              {footerParts.map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+              {s(settings?.note_footer) && <p className="mt-1">{s(settings?.note_footer)}</p>}
             </div>
           </div>
         </div>
@@ -216,7 +218,7 @@ export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: 
       <div className="flex items-center gap-1 text-xs text-content-muted">
         <ImageIcon className="h-3.5 w-3.5" />
         {variant === 'tutor'
-          ? 'Versión amable: resumen para enviar al tutor.'
+          ? 'Receta amable: indicaciones para el tutor.'
           : 'Versión completa: incluye todos los datos clínicos.'}
         <button onClick={download} className="ml-auto flex items-center gap-1 text-primary">
           {generating ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
@@ -259,16 +261,41 @@ function VariantButton({
   )
 }
 
+function TreatmentBlock({
+  items,
+  freeText,
+  accent,
+}: {
+  items: ReturnType<typeof parseTreatmentItems>
+  freeText: string
+  accent: string
+}) {
+  if (items.length === 0 && !freeText) return null
+  return (
+    <div style={{ borderLeft: `6px solid ${ACCENT_SOFT}`, paddingLeft: 20 }}>
+      <Label accent={accent}>Tratamiento</Label>
+      {items.map((it, i) => (
+        <p key={i} className="mb-1">
+          • {formatTreatmentItem(it)}
+        </p>
+      ))}
+      {freeText && <p className={items.length ? 'mt-1' : undefined}>{freeText}</p>}
+    </div>
+  )
+}
+
 function DoctorBody({
   c,
   exam,
   vitals,
   accent,
+  items,
 }: {
   c: Partial<Consultation>
   exam: [string, string][]
   vitals: string[]
   accent: string
+  items: ReturnType<typeof parseTreatmentItems>
 }) {
   return (
     <>
@@ -304,7 +331,7 @@ function DoctorBody({
       )}
       <Section title="Diagnóstico presuntivo" value={s(c.presumptive_diagnosis)} accent={accent} strong />
       <Section title="Diagnósticos diferenciales" value={s(c.differential_diagnosis)} accent={accent} />
-      <Section title="Tratamiento" value={s(c.treatment)} accent={accent} />
+      <TreatmentBlock items={items} freeText={s(c.treatment)} accent={accent} />
       <Section title="Recomendaciones" value={s(c.recommendations)} accent={accent} />
       {parseCustomValues(c.custom_values).map((f) => (
         <Section key={f.label} title={f.label} value={f.value} accent={accent} />
@@ -321,11 +348,13 @@ function TutorBody({
   owner,
   patient,
   accent,
+  items,
 }: {
   c: Partial<Consultation>
   owner?: Pick<Owner, 'full_name'> | null
   patient?: Pick<Patient, 'name'> | null
   accent: string
+  items: ReturnType<typeof parseTreatmentItems>
 }) {
   const greetName = firstName(owner?.full_name)
   const petName = s(patient?.name) || 'tu mascota'
@@ -333,11 +362,11 @@ function TutorBody({
     <>
       <p className="text-[30px]" style={{ color: MUTED }}>
         {greetName ? `Hola ${greetName}, ` : 'Hola, '}
-        este es el resumen de la visita de <span className="font-semibold">{petName}</span>.
+        estas son las indicaciones para <span className="font-semibold">{petName}</span>.
       </p>
       <Section title="Motivo de la visita" value={s(c.reason)} accent={accent} />
       <Section title="Diagnóstico" value={s(c.presumptive_diagnosis)} accent={accent} strong />
-      <Section title="Tratamiento indicado" value={s(c.treatment)} accent={accent} />
+      <TreatmentBlock items={items} freeText={s(c.treatment)} accent={accent} />
       <Section title="Cuidados en casa" value={s(c.recommendations)} accent={accent} />
       {s(c.follow_up_date) && (
         <Section title="Próxima revisión" value={formatDate(c.follow_up_date)} accent={accent} strong />

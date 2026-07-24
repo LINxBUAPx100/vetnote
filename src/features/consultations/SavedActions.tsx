@@ -11,18 +11,23 @@ interface Props {
   consultation: Consultation
   patient: Pick<Patient, 'patient_id' | 'name' | 'species' | 'breed'>
   settings?: ClinicSettings | null
+  /** Reinicia el wizard para una nueva consulta del mismo paciente (sin recargar). */
+  onNewConsultation: () => void
+  /** Reinicia el wizard enlazando como seguimiento de la consulta recién guardada. */
+  onFollowUp: () => void
 }
 
 /** Pantalla post-guardado: acciones recursivas sin volver al inicio. */
-export function SavedActions({ note, consultation, patient, settings }: Props) {
+export function SavedActions({
+  note,
+  consultation,
+  patient,
+  settings,
+  onNewConsultation,
+  onFollowUp,
+}: Props) {
   const navigate = useNavigate()
   const [panel, setPanel] = useState<'none' | 'note' | 'image'>('note')
-
-  // Reinicia el wizard limpiamente cambiando el hash y recargando.
-  const restartWizard = (query = '') => {
-    window.location.hash = `#/patients/${patient.patient_id}/consultations/new${query}`
-    window.location.reload()
-  }
 
   return (
     <div className="space-y-4">
@@ -54,14 +59,10 @@ export function SavedActions({ note, consultation, patient, settings }: Props) {
         >
           <FileText className="h-4 w-4" /> Ver expediente
         </Button>
-        <Button variant="ghost" className="w-full justify-start" onClick={() => restartWizard()}>
+        <Button variant="ghost" className="w-full justify-start" onClick={onNewConsultation}>
           <RefreshCw className="h-4 w-4" /> Nueva consulta del mismo paciente
         </Button>
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={() => restartWizard(`?followUp=${consultation.consultation_id}`)}
-        >
+        <Button variant="ghost" className="w-full justify-start" onClick={onFollowUp}>
           <CalendarPlus className="h-4 w-4" /> Registrar seguimiento
         </Button>
         <Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/')}>

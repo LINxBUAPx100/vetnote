@@ -49,6 +49,8 @@ export const consultationSchema = z.object({
   consultation_type: z.enum(['consulta', 'follow_up']).default('consulta'),
   parent_consultation_id: optionalText(60),
   consultation_date: optionalText(30),
+  attended_at: optionalText(40),
+  treatment_items: optionalText(20000),
   reason: optionalText(),
   remote_anamnesis: optionalText(),
   current_anamnesis: optionalText(),

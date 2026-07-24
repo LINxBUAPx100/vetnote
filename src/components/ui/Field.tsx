@@ -10,7 +10,12 @@ import {
   type ReactNode,
 } from 'react'
 import { cn } from '@/lib/cn'
-import { todayInputValue } from '@/utils/format'
+import {
+  todayInputValue,
+  toDateTimeLocalValue,
+  fromDateTimeLocalValue,
+  nowDateTimeLocalValue,
+} from '@/utils/format'
 
 const baseControl =
   'w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-content-muted'
@@ -115,6 +120,42 @@ export function DateInput({
         className="shrink-0 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-primary transition-colors hover:bg-background"
       >
         Hoy
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Campo de fecha y hora con botón "Ahora" que rellena el momento actual.
+ * Trabaja con ISO (con zona) hacia afuera y con `datetime-local` por dentro.
+ * Controlado: `value` es ISO (o ''), `onChange` recibe ISO (o '').
+ */
+export function DateTimeInput({
+  value,
+  onChange,
+  id,
+  ...rest
+}: {
+  value: string
+  onChange: (isoValue: string) => void
+  id?: string
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type'>) {
+  return (
+    <div className="flex gap-2">
+      <Input
+        type="datetime-local"
+        id={id}
+        value={toDateTimeLocalValue(value)}
+        onChange={(e) => onChange(fromDateTimeLocalValue(e.target.value))}
+        className="flex-1"
+        {...rest}
+      />
+      <button
+        type="button"
+        onClick={() => onChange(fromDateTimeLocalValue(nowDateTimeLocalValue()))}
+        className="shrink-0 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-primary transition-colors hover:bg-background"
+      >
+        Ahora
       </button>
     </div>
   )

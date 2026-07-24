@@ -5,14 +5,18 @@ import {
   Pill,
   Settings,
   ChevronRight,
+  Stethoscope,
+  IdCard,
   type LucideIcon,
 } from 'lucide-react'
 
 const items: { to: string; label: string; icon: LucideIcon; desc: string }[] = [
+  { to: '/consultations', label: 'Consultas', icon: Stethoscope, desc: 'Historial de consultas' },
+  { to: '/carnet', label: 'Carnet sanitario', icon: IdCard, desc: 'Vacunas y desparasitaciones' },
   { to: '/owners', label: 'Tutores', icon: Users, desc: 'Directorio de tutores y sus mascotas' },
   { to: '/templates', label: 'Plantillas', icon: FileText, desc: 'Plantillas de consulta' },
   { to: '/medications', label: 'Medicamentos', icon: Pill, desc: 'Catálogo de medicamentos' },
-  { to: '/settings', label: 'Configuración', icon: Settings, desc: 'Datos, servidor y sincronización' },
+  { to: '/settings', label: 'Configuración', icon: Settings, desc: 'Datos de la clínica' },
 ]
 
 /** Menú "Más" para navegación móvil (secciones que no caben en la barra inferior). */

@@ -22,6 +22,37 @@ export function todayInputValue(): string {
 }
 
 /**
+ * Convierte un ISO a valor para `<input type="datetime-local">`
+ * (`yyyy-MM-ddTHH:mm`, hora local). Devuelve '' si no hay valor válido.
+ */
+export function toDateTimeLocalValue(iso?: string): string {
+  if (!iso) return ''
+  try {
+    const d = parseISO(iso)
+    return isValid(d) ? format(d, "yyyy-MM-dd'T'HH:mm") : ''
+  } catch {
+    return ''
+  }
+}
+
+/** Convierte el valor local de un datetime-local a ISO (con zona). */
+export function fromDateTimeLocalValue(local: string): string {
+  if (!local) return ''
+  const d = new Date(local)
+  return isValid(d) ? d.toISOString() : local
+}
+
+/** Momento actual como valor para datetime-local (`yyyy-MM-ddTHH:mm`, local). */
+export function nowDateTimeLocalValue(): string {
+  return format(new Date(), "yyyy-MM-dd'T'HH:mm")
+}
+
+/** Formatea solo la hora (HH:mm) de un ISO; '' si no es válido. */
+export function formatTime(value?: string): string {
+  return formatDate(value, 'HH:mm')
+}
+
+/**
  * Normaliza un teléfono a solo dígitos para enlaces tel:/wa.me.
  * Google Sheets puede devolver un teléfono formado solo por dígitos como NÚMERO,
  * por eso forzamos String() antes de operar (evita "replace is not a function").

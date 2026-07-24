@@ -4,20 +4,21 @@
 
 /* Tokens de diseño VetNote como variables CSS (fuente de verdad del theming). */
 :root {
-  --color-primary: #2f6f64;
-  --color-primary-dark: #24584f;
-  --color-secondary: #5b7fa3;
-  --color-accent: #d99a4e;
-  --color-background: #f5f7f6;
+  --color-primary: #3a8fe0;
+  --color-primary-dark: #2b72bf;
+  --color-primary-light: #8fc3f2;
+  --color-secondary: #6fb1ee;
+  --color-accent: #ffb020;
+  --color-background: #eef5fd;
   --color-surface: #ffffff;
-  --color-text: #1f2933;
-  --color-text-muted: #667085;
-  --color-border: #dde3e1;
-  --color-success: #348a5b;
-  --color-warning: #c98624;
-  --color-error: #c94a4a;
+  --color-text: #122740;
+  --color-text-muted: #5a7189;
+  --color-border: #d6e4f3;
+  --color-success: #2fa36b;
+  --color-warning: #e8940c;
+  --color-error: #e5484d;
 
-  --radius-card: 16px;
+  --radius-card: 20px;
 
   color-scheme: light;
 }
@@ -28,6 +29,14 @@
   }
   body {
     @apply bg-background text-content font-sans antialiased;
+    /* Fondo con un sutil degradado azul para un aire más dinámico. */
+    background-image: radial-gradient(
+        1200px 600px at 100% -10%,
+        rgba(111, 177, 238, 0.18),
+        transparent 60%
+      ),
+      radial-gradient(900px 500px at -10% 110%, rgba(143, 195, 242, 0.16), transparent 55%);
+    background-attachment: fixed;
     /* Respeta el notch en móviles instalados como PWA. */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
@@ -42,12 +51,16 @@
 
 @layer components {
   .card {
-    @apply rounded-card border border-border bg-surface shadow-card;
+    @apply rounded-card border border-border bg-surface shadow-card transition-shadow;
   }
   .btn-primary {
-    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-xl bg-primary px-4 font-medium text-white transition-colors hover:bg-primary-dark active:bg-primary-dark disabled:opacity-50;
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl bg-brand-gradient px-4 font-semibold text-white shadow-[0_6px_16px_rgba(58,143,224,0.32)] transition-all hover:brightness-105 active:brightness-95 disabled:opacity-50;
   }
   .btn-ghost {
-    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 font-medium text-content transition-colors hover:bg-background;
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 font-medium text-content transition-colors hover:bg-background;
+  }
+  /* Chip/pastilla suave reutilizable. */
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary;
   }
 }
