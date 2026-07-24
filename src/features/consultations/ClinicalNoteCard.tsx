@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import {
   Download,
@@ -16,6 +16,7 @@ import { parseTreatmentItems, formatTreatmentItem } from './treatment'
 import type { Consultation, Patient, Owner, ClinicSettings } from '@/types/domain'
 
 type Variant = 'doctor' | 'tutor'
+type FormatMode = 'auto' | '4:5' | '9:16' | '1:1'
 
 const WIDTH = 1080
 const PREVIEW_W = 320
@@ -23,6 +24,21 @@ const ACCENT = '#3A8FE0'
 const ACCENT_SOFT = '#E7F1FC'
 const INK = '#122740'
 const MUTED = '#5A7189'
+
+// Altura mínima por formato (ancho fijo 1080). "auto" se ajusta al contenido.
+const MIN_HEIGHT: Record<FormatMode, number> = {
+  auto: 0,
+  '4:5': Math.round((WIDTH * 5) / 4), // 1350
+  '9:16': Math.round((WIDTH * 16) / 9), // 1920
+  '1:1': WIDTH, // 1080
+}
+
+const FORMAT_OPTIONS: { value: FormatMode; label: string }[] = [
+  { value: 'auto', label: 'Sugerido' },
+  { value: '4:5', label: '4:5' },
+  { value: '1:1', label: '1:1' },
+  { value: '9:16', label: '9:16' },
+]
 
 interface Props {
   consultation: Partial<Consultation>
@@ -49,10 +65,21 @@ function firstName(full?: string): string {
  */
 export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: Props) {
   const [variant, setVariant] = useState<Variant>('doctor')
+  const [format, setFormat] = useState<FormatMode>('auto')
   const [generating, setGenerating] = useState(false)
+  const [cardHeight, setCardHeight] = useState(0)
   const cardRef = useRef<HTMLDivElement>(null)
   const scale = PREVIEW_W / WIDTH
   const accent = s(settings?.primary_color) || ACCENT
+  const minHeight = MIN_HEIGHT[format]
+
+  // Mide el alto real del card (respeta minHeight) para dimensionar la vista
+  // previa: el transform:scale NO reduce la caja de layout, así que sin esto el
+  // contenedor quedaría del alto sin escalar y aparecería un hueco enorme.
+  // Se remide ante cualquier cambio de contenido, variante o formato.
+  useLayoutEffect(() => {
+    if (cardRef.current) setCardHeight(cardRef.current.scrollHeight)
+  }, [variant, format, c, patient, owner, settings])
 
   const download = async () => {
     if (!cardRef.current) return
@@ -135,19 +162,42 @@ export function ClinicalNoteCard({ consultation: c, patient, owner, settings }: 
         />
       </div>
 
+      {/* Selector de formato: "Sugerido" ajusta al contenido; el resto fija una
+          proporción mínima (nunca corta: si el contenido es mayor, crece). */}
+      <div>
+        <p className="mb-1 text-xs font-medium text-content-muted">Formato de imagen</p>
+        <div className="grid grid-cols-4 gap-2">
+          {FORMAT_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => setFormat(o.value)}
+              className={`rounded-xl border px-2 py-2 text-sm font-medium transition-colors ${
+                format === o.value
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-surface text-content-muted hover:bg-background'
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Button onClick={download} loading={generating} className="w-full">
         <Download className="h-4 w-4" /> Descargar PNG
       </Button>
 
-      {/* Vista previa escalada (el nodo real se exporta a tamaño completo, alto automático). */}
+      {/* Vista previa escalada. El contenedor toma el alto medido × escala para
+          que no aparezca espacio en blanco de más. */}
       <div
         className="mx-auto overflow-hidden rounded-xl border border-border shadow-card"
-        style={{ width: PREVIEW_W }}
+        style={{ width: PREVIEW_W, height: cardHeight ? cardHeight * scale : undefined }}
       >
         <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: WIDTH }}>
           <div
             ref={cardRef}
-            style={{ width: WIDTH, color: INK }}
+            style={{ width: WIDTH, minHeight, color: INK }}
             className="flex flex-col bg-white font-sans"
           >
             {/* Encabezado */}

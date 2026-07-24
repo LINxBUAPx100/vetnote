@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { toPng } from 'html-to-image'
 import { Download, IdCard } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -37,8 +37,13 @@ function s(v?: string | number | null): string {
 export function CarnetCard({ entries, patient, owner, settings }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [generating, setGenerating] = useState(false)
+  const [cardHeight, setCardHeight] = useState(0)
   const accent = s(settings?.primary_color) || ACCENT
   const scale = PREVIEW_W / WIDTH
+
+  useLayoutEffect(() => {
+    if (cardRef.current) setCardHeight(cardRef.current.scrollHeight)
+  }, [entries, patient, owner, settings])
 
   const download = async () => {
     if (!cardRef.current) return
@@ -77,7 +82,7 @@ export function CarnetCard({ entries, patient, owner, settings }: Props) {
 
       <div
         className="mx-auto overflow-hidden rounded-xl border border-border shadow-card"
-        style={{ width: PREVIEW_W }}
+        style={{ width: PREVIEW_W, height: cardHeight ? cardHeight * scale : undefined }}
       >
         <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: WIDTH }}>
           <div ref={cardRef} style={{ width: WIDTH, color: INK }} className="bg-white font-sans">

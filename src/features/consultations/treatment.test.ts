@@ -15,8 +15,8 @@ describe('treatment', () => {
     ])
     const items = parseTreatmentItems(json)
     expect(items).toHaveLength(1)
-    expect(items[0].name).toBe('Meloxicam')
-    expect(items[0].dose).toBe('1 tab')
+    expect(items[0]?.name).toBe('Meloxicam')
+    expect(items[0]?.dose).toBe('1 tab')
   })
 
   it('tolera JSON inválido sin romper', () => {

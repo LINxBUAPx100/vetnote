@@ -60,3 +60,31 @@ export function formatTime(value?: string): string {
 export function phoneDigits(phone?: string | number | null): string {
   return String(phone ?? '').replace(/\D/g, '')
 }
+
+/**
+ * Número con lada país para wa.me / tel. Por defecto México (52): a un número
+ * local de 10 dígitos le antepone la lada; si ya trae más dígitos se asume que
+ * ya incluye la lada y se deja igual.
+ */
+export function phoneWithCountry(
+  phone?: string | number | null,
+  countryCode = '52',
+): string {
+  const d = phoneDigits(phone)
+  if (!d) return ''
+  return d.length === 10 ? `${countryCode}${d}` : d
+}
+
+/**
+ * Formato de visualización con "+lada" para números MX de 10 dígitos.
+ * (Se usa al guardar tutores para que el directorio quede consistente.)
+ */
+export function normalizePhoneDisplay(raw?: string | null, countryCode = '52'): string {
+  const s = String(raw ?? '').trim()
+  if (!s) return s
+  const d = s.replace(/\D/g, '')
+  if (d.length === 10) {
+    return `+${countryCode} ${d.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')}`
+  }
+  return s
+}

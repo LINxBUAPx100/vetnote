@@ -1,5 +1,6 @@
 import type { Owner, Patient } from '@/types/domain'
 import type { Paginated } from './patientService'
+import { normalizePhoneDisplay } from '@/utils/format'
 import {
   fsGet,
   fsListActive,
@@ -14,11 +15,21 @@ import {
 const COL = 'owners'
 const PATIENTS = 'patients'
 
+/** Antepone automáticamente la lada (+52 por defecto) a los teléfonos MX. */
+function withNormalizedPhones<T extends Partial<Owner>>(payload: T): T {
+  const out: Partial<Owner> = { ...payload }
+  if (payload.phone !== undefined) out.phone = normalizePhoneDisplay(payload.phone)
+  if (payload.secondary_phone !== undefined) {
+    out.secondary_phone = normalizePhoneDisplay(payload.secondary_phone)
+  }
+  return out as T
+}
+
 export const ownerService = {
   create: async (payload: Partial<Owner>): Promise<Owner> => {
     const now = nowIso()
     const record = stripUndefined({
-      ...payload,
+      ...withNormalizedPhones(payload),
       owner_id: uuid(),
       created_at: now,
       updated_at: now,
@@ -32,7 +43,7 @@ export const ownerService = {
     expectedUpdatedAt?: string,
   ): Promise<Owner> => {
     const { owner_id, ...rest } = payload
-    const changes = stripUndefined({ ...rest, updated_at: nowIso() })
+    const changes = stripUndefined({ ...withNormalizedPhones(rest), updated_at: nowIso() })
     return fsUpdate<Owner>(COL, owner_id, changes, expectedUpdatedAt)
   },
 

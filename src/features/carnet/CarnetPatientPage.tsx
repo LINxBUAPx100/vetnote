@@ -9,10 +9,10 @@ import { CarnetCard } from './CarnetCard'
 import { formatDate } from '@/utils/format'
 import type { CarnetCategory } from '@/types/domain'
 
-const CATEGORY_META: Record<CarnetCategory, { label: string; icon: typeof Syringe }> = {
-  vacuna: { label: 'Vacuna', icon: Syringe },
-  desparasitacion: { label: 'Desparasitación', icon: Bug },
-  otro: { label: 'Otro', icon: Circle },
+const CATEGORY_META: Record<CarnetCategory, { label: string; plural: string; icon: typeof Syringe }> = {
+  vacuna: { label: 'Vacuna', plural: 'Vacunas', icon: Syringe },
+  desparasitacion: { label: 'Desparasitación', plural: 'Desparasitaciones', icon: Bug },
+  otro: { label: 'Otro', plural: 'Otros', icon: Circle },
 }
 
 /** Carnet sanitario de un paciente. */
@@ -56,32 +56,43 @@ export function CarnetPatientPage() {
         />
       )}
 
-      <ul className="space-y-2">
-        {entries.map((e) => {
-          const meta = CATEGORY_META[e.category] ?? CATEGORY_META.otro
-          const Icon = meta.icon
-          return (
-            <li key={e.entry_id}>
-              <Link
-                to={`/carnet/entry/${e.entry_id}/edit`}
-                className="card flex items-center gap-3 p-3 hover:bg-background"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{e.product}</p>
-                  <p className="truncate text-sm text-content-muted">
-                    {meta.label} · {formatDate(e.application_date)}
-                    {e.next_due_date ? ` · próxima ${formatDate(e.next_due_date)}` : ''}
-                  </p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-content-muted" />
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
+      {/* Agrupado por tipo: Vacunas y Desparasitaciones van separadas. */}
+      {(['vacuna', 'desparasitacion', 'otro'] as CarnetCategory[]).map((cat) => {
+        const group = entries.filter((e) => e.category === cat)
+        if (group.length === 0) return null
+        const meta = CATEGORY_META[cat]
+        const Icon = meta.icon
+        return (
+          <section key={cat}>
+            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-content-muted">
+              <Icon className="h-4 w-4" /> {meta.plural}
+              <span className="chip">{group.length}</span>
+            </h2>
+            <ul className="space-y-2">
+              {group.map((e) => (
+                <li key={e.entry_id}>
+                  <Link
+                    to={`/carnet/entry/${e.entry_id}/edit`}
+                    className="card flex items-center gap-3 p-3 hover:bg-background"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{e.product}</p>
+                      <p className="truncate text-sm text-content-muted">
+                        {formatDate(e.application_date)}
+                        {e.next_due_date ? ` · próxima ${formatDate(e.next_due_date)}` : ''}
+                      </p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-content-muted" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })}
 
       {entries.length > 0 && (
         <details className="card p-3">

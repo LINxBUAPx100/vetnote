@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MessageCircle, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useSettings } from '@/features/consultations/hooks'
+import { phoneWithCountry } from '@/utils/format'
 
 interface Ctx {
   pet: string
@@ -32,9 +33,14 @@ const TEMPLATES: MsgTemplate[] = [
       `Hola ${c.owner}, le recordamos la próxima cita de ${c.pet} en ${c.clinic}. ¿Nos confirma su asistencia?`,
   },
   {
-    label: '💉 Recordatorio de vacuna / desparasitación',
+    label: '💉 Recordatorio de vacuna',
     build: (c) =>
-      `Hola ${c.owner}, ${c.pet} tiene pendiente su vacuna/desparasitación. ¿Le agendamos una cita? `,
+      `Hola ${c.owner}, ${c.pet} tiene pendiente su vacuna. ¿Le agendamos una cita en ${c.clinic}?`,
+  },
+  {
+    label: '🪱 Recordatorio de desparasitación',
+    build: (c) =>
+      `Hola ${c.owner}, a ${c.pet} le toca su desparasitación. ¿Le agendamos una cita en ${c.clinic}?`,
   },
   {
     label: '🔬 Resultados listos',
@@ -78,7 +84,9 @@ export function WhatsAppMenu({
 
   const send = (tpl: MsgTemplate) => {
     const text = tpl.build(ctx)
-    const url = `https://wa.me/${phone}${text ? `?text=${encodeURIComponent(text)}` : ''}`
+    const code = settings.data?.country_code?.replace(/\D/g, '') || '52'
+    const waPhone = phoneWithCountry(phone, code)
+    const url = `https://wa.me/${waPhone}${text ? `?text=${encodeURIComponent(text)}` : ''}`
     window.open(url, '_blank', 'noopener,noreferrer')
     setOpen(false)
   }

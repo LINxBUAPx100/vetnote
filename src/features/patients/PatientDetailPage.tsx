@@ -26,7 +26,7 @@ import { useInjectionHistory } from '@/features/injections/hooks'
 import { usePatientAppointments } from '@/features/agenda/hooks'
 import { patientService } from '@/services/patientService'
 import { toast } from '@/stores/uiStore'
-import { formatDate, formatDateTime, phoneDigits } from '@/utils/format'
+import { formatDate, formatDateTime, phoneDigits, phoneWithCountry } from '@/utils/format'
 
 type Tab = 'consultas' | 'estudios' | 'inyecciones'
 
@@ -159,7 +159,7 @@ export function PatientDetailPage() {
         </Button>
         {phone && (
           <>
-            <a href={`tel:${phone}`} className="btn-ghost">
+            <a href={`tel:+${phoneWithCountry(phone)}`} className="btn-ghost">
               <Phone className="h-4 w-4" /> Llamar
             </a>
             <WhatsAppMenu phone={phone} petName={p.name} ownerName={owner?.full_name} />
