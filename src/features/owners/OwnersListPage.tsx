@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Field'
 import { Skeleton, EmptyState, ErrorState } from '@/components/feedback/States'
 import { useDebounced } from '@/hooks/useDebounced'
 import { ownerService } from '@/services/ownerService'
+import { normalizePhoneDisplay } from '@/utils/format'
 
 export function OwnersListPage() {
   const [query, setQuery] = useState('')
@@ -69,7 +70,7 @@ export function OwnersListPage() {
                 <p className="truncate font-medium">{o.full_name}</p>
                 {o.phone && (
                   <p className="flex items-center gap-1 truncate text-sm text-content-muted">
-                    <Phone className="h-3.5 w-3.5" /> {o.phone}
+                    <Phone className="h-3.5 w-3.5" /> {normalizePhoneDisplay(o.phone)}
                   </p>
                 )}
               </div>

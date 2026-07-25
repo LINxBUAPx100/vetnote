@@ -7,7 +7,9 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { Field, Input, Textarea } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { Spinner, ErrorState } from '@/components/feedback/States'
+import { PhoneField } from './PhoneField'
 import { ownerService } from '@/services/ownerService'
+import { useSettings } from '@/features/consultations/hooks'
 import { ownerSchema, type OwnerForm } from '@/schemas'
 import { toast } from '@/stores/uiStore'
 import { ApiClientError } from '@/types/api'
@@ -24,10 +26,15 @@ export function OwnerEditPage() {
     enabled: Boolean(ownerId),
   })
 
+  const settings = useSettings()
+  const defaultCode = settings.data?.country_code?.replace(/\D/g, '') || '52'
+
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<OwnerForm>({ resolver: zodResolver(ownerSchema) })
 
@@ -83,14 +90,21 @@ export function OwnerEditPage() {
       <Field label="Nombre completo" error={errors.full_name?.message}>
         <Input {...register('full_name')} placeholder="Laura Pérez" autoFocus />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Teléfono" error={errors.phone?.message}>
-          <Input {...register('phone')} inputMode="tel" placeholder="55 1234 5678" />
-        </Field>
-        <Field label="Teléfono secundario" error={errors.secondary_phone?.message}>
-          <Input {...register('secondary_phone')} inputMode="tel" placeholder="opcional" />
-        </Field>
-      </div>
+      <Field label="Teléfono" error={errors.phone?.message}>
+        <PhoneField
+          value={watch('phone') ?? ''}
+          onChange={(v) => setValue('phone', v, { shouldDirty: true })}
+          defaultCode={defaultCode}
+        />
+      </Field>
+      <Field label="Teléfono secundario" error={errors.secondary_phone?.message}>
+        <PhoneField
+          value={watch('secondary_phone') ?? ''}
+          onChange={(v) => setValue('secondary_phone', v, { shouldDirty: true })}
+          defaultCode={defaultCode}
+          placeholder="opcional"
+        />
+      </Field>
       <Field label="Correo" error={errors.email?.message}>
         <Input {...register('email')} inputMode="email" placeholder="opcional" />
       </Field>

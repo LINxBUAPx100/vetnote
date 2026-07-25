@@ -64,7 +64,15 @@ export function PatientsListPage() {
               : 'Registra tu primer paciente para comenzar.'
           }
           action={
-            <Button onClick={() => navigate('/patients/new')}>
+            <Button
+              onClick={() =>
+                navigate(
+                  isSearching
+                    ? `/patients/new?name=${encodeURIComponent(debounced.trim())}`
+                    : '/patients/new',
+                )
+              }
+            >
               <Plus className="h-4 w-4" /> Nuevo paciente
             </Button>
           }

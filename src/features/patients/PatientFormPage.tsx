@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Field, Input, Textarea, Select, DateInput } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/feedback/States'
 import { OwnerPicker } from '@/features/owners/OwnerPicker'
+import { BreedPicker } from './BreedPicker'
+import { COLORS } from './breeds'
 import { patientSchema, type PatientForm } from '@/schemas'
 import { usePatient, useCreatePatient, useUpdatePatient } from './hooks'
 import { toast } from '@/stores/uiStore'
+import { approxAgeToBirthDate } from '@/utils/format'
 import type { Owner } from '@/types/domain'
 
 export function PatientFormPage() {
@@ -17,6 +20,8 @@ export function PatientFormPage() {
   const isEdit = Boolean(patientId)
   const navigate = useNavigate()
   const existing = usePatient(patientId)
+  const [searchParams] = useSearchParams()
+  const colorListId = useId()
 
   const [owner, setOwner] = useState<Owner | null>(null)
   const create = useCreatePatient()
@@ -31,7 +36,12 @@ export function PatientFormPage() {
     formState: { errors },
   } = useForm<PatientForm>({
     resolver: zodResolver(patientSchema),
-    defaultValues: { species: 'canino', sterilized: false },
+    defaultValues: {
+      species: 'canino',
+      sterilized: false,
+      // Autocompleta el nombre con lo que se venía escribiendo en el buscador.
+      name: !patientId ? (searchParams.get('name') ?? '') : '',
+    },
   })
 
   // Al cargar en modo edición, precarga valores y tutor.
@@ -115,20 +125,37 @@ export function PatientFormPage() {
             </Select>
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Raza">
-            <Input {...register('breed')} placeholder="Mestizo" />
-          </Field>
-          <Field label="Color">
-            <Input {...register('color')} placeholder="Café" />
-          </Field>
-        </div>
+        <Field label="Raza">
+          <BreedPicker
+            species={watch('species')}
+            value={watch('breed') ?? ''}
+            onChange={(v) => setValue('breed', v, { shouldDirty: true })}
+          />
+        </Field>
+        <Field label="Color">
+          <Input {...register('color')} list={colorListId} placeholder="Café" />
+          <datalist id={colorListId}>
+            {COLORS.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+        </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Peso (kg)" error={errors.weight?.message as string}>
             <Input {...register('weight')} inputMode="decimal" placeholder="18.4" />
           </Field>
-          <Field label="Edad aprox.">
-            <Input {...register('approximate_age')} placeholder="5 años" />
+          <Field label="Edad aprox." hint="Calcula la fecha de nacimiento">
+            <Input
+              {...register('approximate_age', {
+                onBlur: (e) => {
+                  const bd = approxAgeToBirthDate(e.target.value)
+                  if (bd && !watch('birth_date')) {
+                    setValue('birth_date', bd, { shouldDirty: true })
+                  }
+                },
+              })}
+              placeholder="5 años"
+            />
           </Field>
         </div>
         <Field label="Fecha nacimiento">

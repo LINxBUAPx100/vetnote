@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Save, Trash2, Search, PawPrint, X } from 'lucide-react'
+import { ArrowLeft, Save, Trash2, Search, PawPrint, X, MessageCircle, BellRing } from 'lucide-react'
 import { Field, Input, Textarea, Select, DateTimeInput } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/feedback/States'
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useSearchPatients, usePatient } from '@/features/patients/hooks'
+import { useSettings } from '@/features/consultations/hooks'
 import {
   useAppointment,
   useCreateAppointment,
@@ -15,7 +16,14 @@ import {
 } from './hooks'
 import { toast } from '@/stores/uiStore'
 import { ApiClientError } from '@/types/api'
-import { nowDateTimeLocalValue, fromDateTimeLocalValue } from '@/utils/format'
+import {
+  nowDateTimeLocalValue,
+  fromDateTimeLocalValue,
+  formatDate,
+  formatTime,
+  phoneWithCountry,
+  phoneDigits,
+} from '@/utils/format'
 import type { Appointment, AppointmentState } from '@/types/domain'
 
 type Form = Partial<Appointment>
@@ -39,6 +47,7 @@ export function AppointmentEditPage() {
   const update = useUpdateAppointment()
   const del = useDeleteAppointment()
   const linkedPatient = usePatient(presetPatient)
+  const settings = useSettings()
 
   const [form, setForm] = useState<Form>({
     state: 'scheduled',
@@ -49,6 +58,11 @@ export function AppointmentEditPage() {
   const debounced = useDebounced(query)
   const search = useSearchPatients(debounced)
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Datos del paciente vinculado (para los mensajes de WhatsApp).
+  const linked = usePatient(form.patient_id)
+  const waPhone = phoneDigits(linked.data?.owner?.phone)
+  const canWhatsApp = Boolean(waPhone)
 
   useEffect(() => {
     if (isEdit && existing.data) {
@@ -82,11 +96,14 @@ export function AppointmentEditPage() {
           },
           expectedUpdatedAt: existing.data?.updated_at,
         })
+        toast.success('Cita actualizada')
+        navigate('/agenda')
       } else {
-        await create.mutateAsync(form)
+        const created = await create.mutateAsync(form)
+        toast.success('Cita agendada')
+        // Ir a la edición para poder enviar WhatsApp de la cita recién creada.
+        navigate(`/appointments/${created.appointment_id}/edit`)
       }
-      toast.success(isEdit ? 'Cita actualizada' : 'Cita agendada')
-      navigate('/agenda')
     } catch (e) {
       if (e instanceof ApiClientError && e.code === 'CONFLICT') {
         toast.error('Esta cita fue modificada desde otro dispositivo.')
@@ -114,6 +131,23 @@ export function AppointmentEditPage() {
     set('patient_id', undefined)
     set('owner_id', undefined)
     setPatientLabel('')
+  }
+
+  const sendWhatsApp = (kind: 'confirm' | 'remind') => {
+    const owner = linked.data?.owner
+    const first = owner?.full_name?.trim().split(/\s+/)[0] || 'estimado/a tutor/a'
+    const pet = linked.data?.name || 'su mascota'
+    const clinic = settings.data?.clinic_name?.trim() || 'la clínica'
+    const fecha = formatDate(t('scheduled_at'))
+    const hora = formatTime(t('scheduled_at'))
+    const when = [fecha, hora ? `a las ${hora}` : ''].filter(Boolean).join(' ')
+    const text =
+      kind === 'confirm'
+        ? `Hola ${first}, agendamos la cita de ${pet} para el ${when} en ${clinic}. ¡Le esperamos!`
+        : `Hola ${first}, le recordamos la cita de ${pet} el ${when} en ${clinic}. ¿Nos confirma su asistencia?`
+    const code = settings.data?.country_code?.replace(/\D/g, '') || '52'
+    const url = `https://wa.me/${phoneWithCountry(waPhone, code)}?text=${encodeURIComponent(text)}`
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   if (isEdit && existing.isLoading) return <Spinner className="mx-auto mt-10" />
@@ -190,6 +224,27 @@ export function AppointmentEditPage() {
       <Field label="Notas / comentarios">
         <Textarea value={t('notes')} onChange={(e) => set('notes', e.target.value)} placeholder="opcional" />
       </Field>
+
+      {/* Avisar por WhatsApp al tutor de la cita. */}
+      {canWhatsApp ? (
+        <div className="rounded-xl border border-border bg-primary/5 p-3">
+          <p className="mb-2 text-sm font-medium">Avisar por WhatsApp</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="ghost" onClick={() => sendWhatsApp('confirm')}>
+              <MessageCircle className="h-4 w-4" /> Confirmar cita
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => sendWhatsApp('remind')}>
+              <BellRing className="h-4 w-4" /> Recordatorio
+            </Button>
+          </div>
+        </div>
+      ) : (
+        form.patient_id && (
+          <p className="text-xs text-content-muted">
+            El tutor de esta mascota no tiene teléfono; agrégalo para enviar WhatsApp.
+          </p>
+        )
+      )}
 
       {isEdit && (
         <Field label="Estado">

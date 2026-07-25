@@ -2,13 +2,18 @@ import { useState } from 'react'
 import { MessageCircle, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useSettings } from '@/features/consultations/hooks'
-import { phoneWithCountry } from '@/utils/format'
+import { phoneWithCountry, genderWord } from '@/utils/format'
 
 interface Ctx {
   pet: string
   owner: string
   clinic: string
+  /** Sexo de la mascota para elegir títulos en masculino/femenino. */
+  sex?: string
 }
+
+/** Atajo: elige forma masculina/femenina según el sexo de la mascota. */
+const g = (c: Ctx, masc: string, fem: string) => genderWord(c.sex, masc, fem)
 
 interface MsgTemplate {
   label: string
@@ -20,12 +25,12 @@ const TEMPLATES: MsgTemplate[] = [
   {
     label: '🏥 Recibimos a la mascota',
     build: (c) =>
-      `Hola ${c.owner}, le confirmamos que ${c.pet} ingresó a ${c.clinic} y ya está siendo atendido/a. Le mantendremos informado/a.`,
+      `Hola ${c.owner}, le confirmamos que ${c.pet} ingresó a ${c.clinic} y ya está siendo ${g(c, 'atendido', 'atendida')}. Le mantendremos al tanto.`,
   },
   {
     label: '✅ Listo para dar de alta',
     build: (c) =>
-      `Hola ${c.owner}, ${c.pet} ya está listo/a para irse a casa. Puede pasar por él/ella cuando guste. ¡Le esperamos!`,
+      `Hola ${c.owner}, ${c.pet} ya está ${g(c, 'listo', 'lista')} para irse a casa. Puede pasar por ${g(c, 'él', 'ella')} cuando guste. ¡Le esperamos!`,
   },
   {
     label: '📅 Recordatorio de cita',
@@ -65,11 +70,13 @@ const TEMPLATES: MsgTemplate[] = [
 export function WhatsAppMenu({
   phone,
   petName,
+  petSex,
   ownerName,
   className,
 }: {
   phone: string
   petName?: string
+  petSex?: string
   ownerName?: string
   className?: string
 }) {
@@ -80,6 +87,7 @@ export function WhatsAppMenu({
     pet: petName?.trim() || 'su mascota',
     owner: (ownerName?.trim().split(/\s+/)[0]) || 'estimado/a tutor/a',
     clinic: settings.data?.clinic_name?.trim() || 'la clínica',
+    sex: petSex,
   }
 
   const send = (tpl: MsgTemplate) => {

@@ -18,7 +18,7 @@ import { WhatsAppMenu } from '@/components/WhatsAppMenu'
 import { ownerService } from '@/services/ownerService'
 import { patientService } from '@/services/patientService'
 import { toast } from '@/stores/uiStore'
-import { phoneDigits } from '@/utils/format'
+import { phoneDigits, normalizePhoneDisplay } from '@/utils/format'
 
 /** Vista de un tutor: datos de contacto + sus mascotas. */
 export function OwnerDetailPage() {
@@ -77,8 +77,8 @@ export function OwnerDetailPage() {
             <h2 className="text-lg font-bold">{o.full_name}</h2>
             {o.phone && (
               <p className="flex items-center gap-1 text-sm text-content-muted">
-                <Phone className="h-3.5 w-3.5" /> {o.phone}
-                {o.secondary_phone ? ` · ${o.secondary_phone}` : ''}
+                <Phone className="h-3.5 w-3.5" /> {normalizePhoneDisplay(o.phone)}
+                {o.secondary_phone ? ` · ${normalizePhoneDisplay(o.secondary_phone)}` : ''}
               </p>
             )}
             {o.email && (

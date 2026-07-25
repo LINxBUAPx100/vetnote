@@ -6,8 +6,11 @@ import { Search, UserPlus, Check, X, User } from 'lucide-react'
 import { Input, Field } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/feedback/States'
+import { PhoneField } from './PhoneField'
 import { ownerService } from '@/services/ownerService'
+import { useSettings } from '@/features/consultations/hooks'
 import { useDebounced } from '@/hooks/useDebounced'
+import { normalizePhoneDisplay } from '@/utils/format'
 import { ownerSchema, type OwnerForm } from '@/schemas'
 import { toast } from '@/stores/uiStore'
 import type { Owner } from '@/types/domain'
@@ -37,7 +40,9 @@ export function OwnerPicker({ value, onChange }: Props) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{value.full_name}</p>
-          <p className="truncate text-sm text-content-muted">{value.phone || 'Sin teléfono'}</p>
+          <p className="truncate text-sm text-content-muted">
+            {value.phone ? normalizePhoneDisplay(value.phone) : 'Sin teléfono'}
+          </p>
         </div>
         <button
           type="button"
@@ -97,7 +102,9 @@ export function OwnerPicker({ value, onChange }: Props) {
                   <Check className="h-4 w-4 text-primary" />
                   <span className="flex-1 truncate">
                     {o.full_name}
-                    <span className="text-content-muted"> · {o.phone || 's/tel'}</span>
+                    <span className="text-content-muted">
+                      {' '}· {o.phone ? normalizePhoneDisplay(o.phone) : 's/tel'}
+                    </span>
                   </span>
                 </button>
               </li>
@@ -119,9 +126,13 @@ function InlineOwnerForm({
   onCancel: () => void
 }) {
   const qc = useQueryClient()
+  const settings = useSettings()
+  const defaultCode = settings.data?.country_code?.replace(/\D/g, '') || '52'
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<OwnerForm>({ resolver: zodResolver(ownerSchema) })
 
@@ -155,14 +166,16 @@ function InlineOwnerForm({
           }}
         />
       </Field>
-      <div className="grid grid-cols-2 gap-2">
-        <Field label="Teléfono" error={errors.phone?.message}>
-          <Input {...register('phone')} inputMode="tel" placeholder="55 1234 5678" />
-        </Field>
-        <Field label="Correo" error={errors.email?.message}>
-          <Input {...register('email')} inputMode="email" placeholder="opcional" />
-        </Field>
-      </div>
+      <Field label="Teléfono" error={errors.phone?.message}>
+        <PhoneField
+          value={watch('phone') ?? ''}
+          onChange={(v) => setValue('phone', v, { shouldDirty: true })}
+          defaultCode={defaultCode}
+        />
+      </Field>
+      <Field label="Correo" error={errors.email?.message}>
+        <Input {...register('email')} inputMode="email" placeholder="opcional" />
+      </Field>
       <div className="flex gap-2 pt-1">
         <Button type="button" onClick={() => void submitTutor()} loading={create.isPending} className="flex-1">
           Guardar tutor

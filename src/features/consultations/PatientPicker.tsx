@@ -34,7 +34,10 @@ export function PatientPicker({ onSelect }: { onSelect: (p: PatientSearchResult)
       {search.data && search.data.results.length === 0 && debounced.length >= 2 && (
         <div className="card p-4 text-center text-sm text-content-muted">
           <p>No se encontró “{debounced}”.</p>
-          <Button className="mt-2" onClick={() => navigate('/patients/new')}>
+          <Button
+            className="mt-2"
+            onClick={() => navigate(`/patients/new?name=${encodeURIComponent(query.trim())}`)}
+          >
             <Plus className="h-4 w-4" /> Registrar paciente
           </Button>
         </div>
