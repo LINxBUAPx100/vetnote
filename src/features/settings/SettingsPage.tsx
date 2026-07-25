@@ -5,6 +5,7 @@ import { Field, Input, Textarea } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Spinner } from '@/components/feedback/States'
+import { CatalogEditor } from './CatalogEditor'
 import { useSettings } from '@/features/consultations/hooks'
 import { settingsService } from '@/services/catalogService'
 import { toast } from '@/stores/uiStore'
@@ -65,6 +66,16 @@ export function SettingsPage() {
       </div>
 
       <ClinicSection />
+
+      <section className="mt-9 border-t border-line pt-6">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-content-strong">Razas y colores</h2>
+          <p className="mt-1 text-sm text-content-muted">
+            Personaliza las sugerencias que aparecen al registrar un paciente.
+          </p>
+        </div>
+        <CatalogEditor />
+      </section>
     </div>
   )
 }

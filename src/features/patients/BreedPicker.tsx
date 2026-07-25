@@ -1,7 +1,9 @@
 import { useId, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { Input } from '@/components/ui/Field'
-import { breedsForSpecies, splitBreed, joinBreed } from './breeds'
+import { useSettings } from '@/features/consultations/hooks'
+import { resolveBreeds } from '@/features/settings/catalogPrefs'
+import { splitBreed, joinBreed } from './breeds'
 import type { Species } from '@/types/domain'
 
 interface Props {
@@ -16,7 +18,8 @@ interface Props {
  */
 export function BreedPicker({ species, value, onChange }: Props) {
   const listId = useId()
-  const options = breedsForSpecies(species)
+  const settings = useSettings()
+  const options = resolveBreeds(species, settings.data)
   const [primary, secondary] = splitBreed(value)
   const [showSecond, setShowSecond] = useState(Boolean(secondary))
 
@@ -36,6 +39,8 @@ export function BreedPicker({ species, value, onChange }: Props) {
         onChange={(e) => setPrimary(e.target.value)}
         list={options.length ? listId : undefined}
         placeholder="Mestizo, Labrador, Americano de Pelo Corto…"
+        // Evita que el autocompletado del navegador tape las sugerencias.
+        autoComplete="off"
       />
 
       {showSecond ? (
@@ -45,6 +50,7 @@ export function BreedPicker({ species, value, onChange }: Props) {
             onChange={(e) => setSecondary(e.target.value)}
             list={options.length ? listId : undefined}
             placeholder="Segunda raza (cruce)"
+            autoComplete="off"
           />
           <button
             type="button"

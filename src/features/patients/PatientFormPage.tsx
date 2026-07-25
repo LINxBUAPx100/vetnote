@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/feedback/States'
 import { OwnerPicker } from '@/features/owners/OwnerPicker'
 import { BreedPicker } from './BreedPicker'
-import { COLORS } from './breeds'
+import { useSettings } from '@/features/consultations/hooks'
+import { resolveCatalog } from '@/features/settings/catalogPrefs'
 import { patientSchema, type PatientForm } from '@/schemas'
 import { usePatient, useCreatePatient, useUpdatePatient } from './hooks'
 import { toast } from '@/stores/uiStore'
@@ -22,6 +23,8 @@ export function PatientFormPage() {
   const existing = usePatient(patientId)
   const [searchParams] = useSearchParams()
   const colorListId = useId()
+  const settings = useSettings()
+  const colorOptions = resolveCatalog('colors', settings.data)
 
   const [owner, setOwner] = useState<Owner | null>(null)
   const create = useCreatePatient()
@@ -132,10 +135,15 @@ export function PatientFormPage() {
             onChange={(v) => setValue('breed', v, { shouldDirty: true })}
           />
         </Field>
-        <Field label="Color">
-          <Input {...register('color')} list={colorListId} placeholder="Café" />
+        <Field label="Color" hint={`${colorOptions.length} sugerencias`}>
+          <Input
+            {...register('color')}
+            list={colorListId}
+            placeholder="Café, atigrado, blanco y negro…"
+            autoComplete="off"
+          />
           <datalist id={colorListId}>
-            {COLORS.map((c) => (
+            {colorOptions.map((c) => (
               <option key={c} value={c} />
             ))}
           </datalist>
