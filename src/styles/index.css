@@ -4,21 +4,23 @@
 
 /* Tokens de diseño VetNote como variables CSS (fuente de verdad del theming). */
 :root {
-  --color-primary: #3a8fe0;
-  --color-primary-dark: #2b72bf;
-  --color-primary-light: #8fc3f2;
-  --color-secondary: #6fb1ee;
-  --color-accent: #ffb020;
-  --color-background: #eef5fd;
+  --color-primary: #0f6e8a;
+  --color-primary-dark: #0c5a72;
+  --color-primary-soft: #edf6f9;
+  --color-accent: #b9633a;
+  --color-canvas: #f6f8fa;
   --color-surface: #ffffff;
-  --color-text: #122740;
-  --color-text-muted: #5a7189;
-  --color-border: #d6e4f3;
-  --color-success: #2fa36b;
-  --color-warning: #e8940c;
-  --color-error: #e5484d;
+  --color-sunken: #eef2f6;
+  --color-ink: #0b1b2b;
+  --color-text: #334155;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+  --color-line: #e4eaf1;
+  --color-success: #0f7b5f;
+  --color-warning: #b45309;
+  --color-error: #b42318;
 
-  --radius-card: 20px;
+  --radius-card: 12px;
 
   color-scheme: light;
 }
@@ -28,39 +30,74 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-content font-sans antialiased;
-    /* Fondo con un sutil degradado azul para un aire más dinámico. */
-    background-image: radial-gradient(
-        1200px 600px at 100% -10%,
-        rgba(111, 177, 238, 0.18),
-        transparent 60%
-      ),
-      radial-gradient(900px 500px at -10% 110%, rgba(143, 195, 242, 0.16), transparent 55%);
-    background-attachment: fixed;
-    /* Respeta el notch en móviles instalados como PWA. */
+    @apply bg-canvas font-sans text-content antialiased;
+    /* Inter con alternativas tipográficas más legibles (1 sin serifa, a de caja simple). */
+    font-feature-settings: 'cv05' 1, 'cv11' 1, 'ss01' 1;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
-  /* Tipografía clínica legible por defecto. */
+
+  /* Jerarquía tipográfica: títulos oscuros y ajustados; el cuerpo respira. */
+  h1,
+  h2,
+  h3 {
+    @apply text-content-strong;
+    text-wrap: balance;
+  }
+
   input,
   textarea,
   select {
-    @apply text-content;
+    @apply text-content-strong;
+  }
+
+  /* Anillo de foco coherente en toda la app (accesible y discreto). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/35 ring-offset-2 ring-offset-surface;
+  }
+
+  ::selection {
+    background: var(--color-primary-soft);
+    color: var(--color-ink);
+  }
+
+  /* Números tabulares en datos clínicos (alinean en columnas). */
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }
 
 @layer components {
-  .card {
-    @apply rounded-card border border-border bg-surface shadow-card transition-shadow;
+  /* Superficie base: se separa por BORDE, no por sombra. */
+  .panel {
+    @apply rounded-card border border-line bg-surface;
   }
+  .card {
+    @apply rounded-card border border-line bg-surface;
+  }
+
+  /* Etiqueta de sección: versalitas discretas para dar ritmo editorial. */
+  .eyebrow {
+    @apply text-2xs font-semibold uppercase tracking-label text-content-subtle;
+  }
+
+  /* Fila de lista: densidad cómoda, separadas por divisor (no por tarjetas). */
+  .row {
+    @apply flex items-center gap-3 px-3 py-3 transition-colors duration-200 hover:bg-sunken/70;
+  }
+
   .btn-primary {
-    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl bg-brand-gradient px-4 font-semibold text-white shadow-[0_6px_16px_rgba(58,143,224,0.32)] transition-all hover:brightness-105 active:brightness-95 disabled:opacity-50;
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-white transition-all duration-200 hover:bg-primary-600 active:bg-primary-700 disabled:opacity-50;
   }
   .btn-ghost {
-    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 font-medium text-content transition-colors hover:bg-background;
+    @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-sm font-medium text-content transition-all duration-200 hover:border-line-strong hover:bg-sunken/60 disabled:opacity-50;
   }
-  /* Chip/pastilla suave reutilizable. */
+
+  /* Pastilla de estado / conteo. */
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary;
+    @apply inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-2xs font-semibold text-primary-600;
+  }
+  .chip-neutral {
+    @apply inline-flex items-center gap-1 rounded-full bg-sunken px-2 py-0.5 text-2xs font-semibold text-content-muted;
   }
 }

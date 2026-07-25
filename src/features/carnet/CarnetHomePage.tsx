@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, IdCard, PawPrint, BellRing } from 'lucide-react'
-import { Input } from '@/components/ui/Field'
+import { IdCard, PawPrint, BellRing, ChevronRight } from 'lucide-react'
+import { SearchInput } from '@/components/ui/Field'
+import { PageHeader, SectionHeader } from '@/components/layout/PageHeader'
 import { Spinner, EmptyState } from '@/components/feedback/States'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useSearchPatients } from '@/features/patients/hooks'
@@ -19,82 +20,89 @@ export function CarnetHomePage() {
   const dueSoon = (upcoming.data?.results ?? []).filter((e) => (e.next_due_date ?? '') >= today)
 
   return (
-    <div className="space-y-5">
-      <header>
-        <h1 className="text-xl font-bold">Carnet sanitario</h1>
-        <p className="text-sm text-content-muted">
-          Vacunas, desparasitaciones y refuerzos por mascota.
-        </p>
-      </header>
+    <div>
+      <PageHeader
+        title="Carnet sanitario"
+        description="Vacunas, desparasitaciones y refuerzos de cada mascota."
+      />
 
-      <label className="flex min-h-touch items-center gap-2 rounded-xl border border-border bg-surface px-3">
-        <Search className="h-5 w-5 text-content-muted" />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar mascota por nombre o tutor…"
-          aria-label="Buscar mascota"
-          className="border-0 bg-transparent px-0 focus:ring-0"
-        />
-      </label>
+      <SearchInput
+        value={query}
+        onChange={setQuery}
+        label="Buscar mascota"
+        placeholder="Buscar mascota por nombre o tutor…"
+      />
 
-      {search.isFetching && <Spinner className="mx-auto" />}
+      {search.isFetching && <Spinner className="mx-auto my-4" />}
       {debounced.length >= 2 && search.data && (
-        <ul className="space-y-2">
-          {search.data.results.map((p) => (
-            <li key={p.patient_id}>
-              <Link
-                to={`/carnet/${p.patient_id}`}
-                className="card flex items-center gap-3 p-3 hover:bg-background"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <PawPrint className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{p.name}</p>
-                  <p className="truncate text-sm text-content-muted">
-                    {[p.species, p.breed].filter(Boolean).join(' · ')}
-                    {p.owner_name ? ` — ${p.owner_name}` : ''}
-                  </p>
-                </div>
-                <IdCard className="h-5 w-5 text-content-muted" />
-              </Link>
-            </li>
-          ))}
-          {search.data.results.length === 0 && (
-            <p className="text-center text-sm text-content-muted">Sin resultados.</p>
+        <div className="mt-3">
+          {search.data.results.length === 0 ? (
+            <p className="rounded-card border border-dashed border-line-strong px-4 py-4 text-sm text-content-muted">
+              Sin resultados para “{debounced}”.
+            </p>
+          ) : (
+            <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
+              {search.data.results.map((p) => (
+                <li key={p.patient_id}>
+                  <Link to={`/carnet/${p.patient_id}`} className="row">
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary"
+                      aria-hidden
+                    >
+                      <PawPrint className="h-4 w-4" strokeWidth={1.9} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-content-strong">{p.name}</p>
+                      <p className="mt-0.5 truncate text-xs text-content-subtle">
+                        {[p.species, p.breed].filter(Boolean).join(' · ')}
+                        {p.owner_name ? ` — ${p.owner_name}` : ''}
+                      </p>
+                    </div>
+                    <IdCard className="h-4 w-4 shrink-0 text-content-subtle" strokeWidth={1.9} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
-        </ul>
+        </div>
       )}
 
-      <section>
-        <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-content-muted">
-          <BellRing className="h-4 w-4" /> Próximas dosis
-        </h2>
-        {upcoming.isLoading && <Spinner className="mx-auto" />}
+      <section className="mt-9">
+        <SectionHeader title="Próximas dosis" count={dueSoon.length} />
+        {upcoming.isLoading && <Spinner className="mx-auto my-4" />}
         {!upcoming.isLoading && dueSoon.length === 0 && (
-          <EmptyState icon={BellRing} title="Sin dosis próximas" description="Nada agendado por ahora." />
+          <EmptyState
+            icon={BellRing}
+            title="Sin dosis próximas"
+            description="Cuando registres una vacuna o desparasitación con fecha de refuerzo, aparecerá aquí."
+          />
         )}
-        <ul className="space-y-2">
-          {dueSoon.slice(0, 20).map((e) => (
-            <li key={e.entry_id}>
-              <Link
-                to={`/carnet/entry/${e.entry_id}/edit`}
-                className="card flex items-center gap-3 p-3 hover:bg-background"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
-                  <BellRing className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{e.product}</p>
-                  <p className="text-sm text-content-muted">
-                    Próxima dosis: {formatDate(e.next_due_date)}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {dueSoon.length > 0 && (
+          <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
+            {dueSoon.slice(0, 20).map((e) => (
+              <li key={e.entry_id}>
+                <Link to={`/carnet/entry/${e.entry_id}/edit`} className="row">
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-50 text-accent"
+                    aria-hidden
+                  >
+                    <BellRing className="h-4 w-4" strokeWidth={1.9} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-content-strong">{e.product}</p>
+                    <p className="mt-0.5 text-xs text-content-subtle">
+                      Próxima dosis: {formatDate(e.next_due_date)}
+                    </p>
+                  </div>
+                  <ChevronRight
+                    className="h-4 w-4 shrink-0 text-content-subtle"
+                    strokeWidth={1.9}
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   )

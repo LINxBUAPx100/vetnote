@@ -6,10 +6,10 @@ import { toast } from '@/stores/uiStore'
 import { formatDate } from '@/utils/format'
 import type { CarnetEntry, Patient, Owner, ClinicSettings } from '@/types/domain'
 
-const ACCENT = '#3A8FE0'
-const ACCENT_SOFT = '#E7F1FC'
-const INK = '#122740'
-const MUTED = '#5A7189'
+const ACCENT = '#0F6E8A'
+const ACCENT_SOFT = '#EDF6F9'
+const INK = '#0B1B2B'
+const MUTED = '#64748B'
 const WIDTH = 1080
 const PREVIEW_W = 320
 

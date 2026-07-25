@@ -20,10 +20,10 @@ type FormatMode = 'auto' | '4:5' | '9:16' | '1:1'
 
 const WIDTH = 1080
 const PREVIEW_W = 320
-const ACCENT = '#3A8FE0'
-const ACCENT_SOFT = '#E7F1FC'
-const INK = '#122740'
-const MUTED = '#5A7189'
+const ACCENT = '#0F6E8A'
+const ACCENT_SOFT = '#EDF6F9'
+const INK = '#0B1B2B'
+const MUTED = '#64748B'
 
 // Altura mínima por formato (ancho fijo 1080). "auto" se ajusta al contenido.
 const MIN_HEIGHT: Record<FormatMode, number> = {

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Save, CheckCircle2 } from 'lucide-react'
 import { Field, Input, Textarea } from '@/components/ui/Field'
 import { Button } from '@/components/ui/Button'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { Spinner } from '@/components/feedback/States'
 import { useSettings } from '@/features/consultations/hooks'
 import { settingsService } from '@/services/catalogService'
@@ -52,12 +53,15 @@ const SECTIONS: { title: string; description?: string; fields: SettingField[] }[
 
 export function SettingsPage() {
   return (
-    <div className="space-y-8 pb-6">
-      <h1 className="text-xl font-bold">Configuración</h1>
+    <div className="pb-6">
+      <PageHeader
+        title="Configuración"
+        description="Estos datos aparecen en las notas, recetas e imágenes clínicas."
+      />
 
-      <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
-        <CheckCircle2 className="h-4 w-4" />
-        Datos guardados en la nube (Firebase) · se sincronizan solos
+      <div className="mb-8 flex items-center gap-2 rounded-xl border border-success/20 bg-success-soft px-3.5 py-2.5 text-xs font-medium text-success">
+        <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.9} />
+        Todo se guarda en la nube y se sincroniza solo
       </div>
 
       <ClinicSection />
@@ -90,16 +94,16 @@ function ClinicSection() {
   if (settings.isLoading) return <Spinner className="mx-auto mt-4" />
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-9">
       {SECTIONS.map((section) => (
-        <section key={section.title} className="space-y-3">
-          <div>
-            <h2 className="font-semibold">{section.title}</h2>
+        <section key={section.title} className="border-t border-line pt-6 first:border-0 first:pt-0">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold text-content-strong">{section.title}</h2>
             {section.description && (
-              <p className="text-sm text-content-muted">{section.description}</p>
+              <p className="mt-1 text-sm text-content-muted">{section.description}</p>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {section.fields.map(({ key, label, kind, hint, placeholder }) => (
               <Field key={String(key)} label={label} hint={hint}>
                 {kind === 'area' ? (
@@ -112,15 +116,15 @@ function ClinicSection() {
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
-                      value={form[key] || '#3A8FE0'}
+                      value={form[key] || '#0F6E8A'}
                       onChange={(e) => set(key, e.target.value)}
-                      className="h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-border bg-surface"
+                      className="h-11 w-14 shrink-0 cursor-pointer rounded-xl border border-line bg-surface p-1 transition-colors duration-200 hover:border-line-strong"
                       aria-label={label}
                     />
                     <Input
                       value={form[key] ?? ''}
                       onChange={(e) => set(key, e.target.value)}
-                      placeholder="#3A8FE0"
+                      placeholder="#0F6E8A"
                     />
                   </div>
                 ) : (
@@ -136,9 +140,9 @@ function ClinicSection() {
         </section>
       ))}
 
-      <div className="sticky bottom-0 -mx-4 border-t border-border bg-surface/90 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
+      <div className="sticky bottom-0 -mx-4 border-t border-line bg-surface/90 px-4 py-3 backdrop-blur-sm md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
         <Button onClick={() => save.mutate(form)} loading={save.isPending} className="w-full">
-          <Save className="h-4 w-4" /> Guardar configuración
+          <Save className="h-4 w-4" strokeWidth={1.9} /> Guardar configuración
         </Button>
       </div>
     </div>

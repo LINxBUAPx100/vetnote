@@ -39,30 +39,35 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex animate-fade-in items-end justify-center bg-ink/25 p-4 backdrop-blur-[2px] sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-title"
       onClick={() => !loading && onCancel()}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-surface p-5 shadow-card"
+        className="w-full max-w-sm animate-slide-up rounded-2xl border border-line bg-surface p-5 shadow-pop"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
           {danger && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-error/10 text-error">
-              <AlertTriangle className="h-5 w-5" />
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-error-soft text-error"
+              aria-hidden
+            >
+              <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h2 id="confirm-title" className="font-bold">
+            <h2 id="confirm-title" className="text-base font-semibold text-content-strong">
               {title}
             </h2>
-            {description && <p className="mt-1 text-sm text-content-muted">{description}</p>}
+            {description && (
+              <p className="mt-1 text-sm leading-relaxed text-content-muted">{description}</p>
+            )}
           </div>
         </div>
-        <div className="mt-5 flex gap-2">
+        <div className="mt-6 flex gap-2">
           <Button variant="ghost" className="flex-1" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>

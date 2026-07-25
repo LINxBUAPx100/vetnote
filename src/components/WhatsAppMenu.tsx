@@ -104,12 +104,14 @@ export function WhatsAppMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="btn-ghost w-full"
+        className="btn-ghost w-full px-3"
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        <MessageCircle className="h-4 w-4" /> WhatsApp
-        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <MessageCircle className="h-4 w-4" strokeWidth={1.9} /> WhatsApp
+        <ChevronDown
+          className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180')}
+        />
       </button>
 
       {open && (
@@ -118,7 +120,7 @@ export function WhatsAppMenu({
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} aria-hidden />
           <div
             role="menu"
-            className="absolute z-50 mt-1 max-h-80 w-72 max-w-[85vw] overflow-auto rounded-xl border border-border bg-surface p-1 shadow-card"
+            className="absolute z-50 mt-1.5 max-h-80 w-72 max-w-[85vw] animate-slide-up overflow-auto rounded-xl border border-line bg-surface p-1 shadow-pop"
           >
             {TEMPLATES.map((tpl) => (
               <button
@@ -126,7 +128,7 @@ export function WhatsAppMenu({
                 type="button"
                 role="menuitem"
                 onClick={() => send(tpl)}
-                className="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-background"
+                className="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-content transition-colors duration-150 hover:bg-sunken hover:text-content-strong"
               >
                 {tpl.label}
               </button>
